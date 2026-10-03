@@ -1,0 +1,29 @@
+{
+  "code": "ca",
+  "name": "Canada",
+  "currency": "CAD",
+  "locale": "en-CA",
+  "flag": "🇨🇦",
+  "rateQuoting": "semi-annual-compounding",
+  "benchmarks": {
+    "mortgage30Year": 0.0529,
+    "mortgage15Year": 0.0489,
+    "carLoanNew": 0.0689,
+    "carLoanUsed": 0.0949,
+    "personalLoan": 0.1049,
+    "savingsHighYield": 0.0385,
+    "inflation": 0.028
+  },
+  "rules": {
+    "minDownPaymentRatio": 0.05,
+    "maxDebtToIncome": 0.44,
+    "creditScoreRange": { "min": 300, "max": 900 },
+    "creditScoreLabel": "Equifax",
+    "commonLoanTermsMonths": [180, 240, 300, 360],
+    "rateCeiling": 0.35,
+    "typicalSalesTaxRate": 0.13,
+    "typicalPropertyTaxRate": 0.009,
+    "mortgageInsuranceRate": 0.031
+  },
+  "disclaimer": "Rates shown are illustrative benchmarks, not offers. Actual rates depend on your credit profile and lender."
+}

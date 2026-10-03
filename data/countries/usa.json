@@ -1,0 +1,29 @@
+{
+  "code": "us",
+  "name": "United States",
+  "currency": "USD",
+  "locale": "en-US",
+  "flag": "🇺🇸",
+  "rateQuoting": "nominal-annual-monthly-compounding",
+  "benchmarks": {
+    "mortgage30Year": 0.0665,
+    "mortgage15Year": 0.0595,
+    "carLoanNew": 0.0719,
+    "carLoanUsed": 0.1122,
+    "personalLoan": 0.1199,
+    "savingsHighYield": 0.042,
+    "inflation": 0.031
+  },
+  "rules": {
+    "minDownPaymentRatio": 0.2,
+    "maxDebtToIncome": 0.43,
+    "creditScoreRange": { "min": 300, "max": 850 },
+    "creditScoreLabel": "FICO",
+    "commonLoanTermsMonths": [180, 240, 360],
+    "rateCeiling": null,
+    "typicalSalesTaxRate": 0.07,
+    "typicalPropertyTaxRate": 0.011,
+    "mortgageInsuranceRate": 0.0055
+  },
+  "disclaimer": "Rates shown are illustrative benchmarks, not offers. Actual rates depend on your credit profile and lender."
+}

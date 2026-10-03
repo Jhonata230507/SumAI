@@ -1,0 +1,7 @@
+# Store text files with LF endings in the repo, whatever the OS that commits them.
+* text=auto eol=lf
+
+# Binary assets: never touch.
+*.png binary
+*.jpg binary
+*.ico binary

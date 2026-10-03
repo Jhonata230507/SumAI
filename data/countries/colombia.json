@@ -1,0 +1,29 @@
+{
+  "code": "co",
+  "name": "Colombia",
+  "currency": "COP",
+  "locale": "es-CO",
+  "flag": "🇨🇴",
+  "rateQuoting": "effective-annual",
+  "benchmarks": {
+    "mortgage30Year": 0.1285,
+    "mortgage15Year": 0.1215,
+    "carLoanNew": 0.1649,
+    "carLoanUsed": 0.1925,
+    "personalLoan": 0.2215,
+    "savingsHighYield": 0.0925,
+    "inflation": 0.052
+  },
+  "rules": {
+    "minDownPaymentRatio": 0.3,
+    "maxDebtToIncome": 0.4,
+    "creditScoreRange": { "min": 150, "max": 950 },
+    "creditScoreLabel": "Datacrédito",
+    "commonLoanTermsMonths": [60, 120, 180, 240],
+    "rateCeiling": 0.2854,
+    "typicalSalesTaxRate": 0.19,
+    "typicalPropertyTaxRate": 0.008,
+    "mortgageInsuranceRate": 0.0
+  },
+  "disclaimer": "Las tasas mostradas son referencias ilustrativas, no ofertas. La tasa real depende de tu perfil crediticio y de la entidad."
+}

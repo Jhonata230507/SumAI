@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Components reference roles (bg-primary, text-muted-foreground),
+ * never raw colours, so the palette changes here in one place.
+ *
+ * The site is dark by design, after the fintech dashboard reference: a matte
+ * blue-black page, slate cards one step lighter, raised tiles inside them,
+ * white type with cool grey secondary text, coral for primary actions (with a
+ * soft glow) and indigo as the secondary accent. White is reserved for the
+ * active state of segmented controls.
+ */
+
+:root {
+  color-scheme: dark;
+
+  --background: #16161e;   /* page — blue-black, matte */
+  --foreground: #f5f5f7;   /* primary text */
+  --card: #1f1f29;         /* panels and cards, one step above the page */
+  --card-foreground: #f5f5f7;
+  --muted: #282834;        /* raised tiles inside cards */
+  --muted-foreground: #8e8ea3;
+  --primary: #ff7a4f;      /* coral — primary actions */
+  --primary-foreground: #1a1210;
+  --secondary: #282834;
+  --secondary-foreground: #f5f5f7;
+  --accent: #2b2b38;       /* hover fill */
+  --accent-foreground: #ffffff;
+  --indigo: #5b5bd6;       /* secondary accent: highlights, balance tiles */
+  --success: #3fb067;
+  --destructive: #e8615a;
+  --destructive-foreground: #ffffff;
+  --border: #2b2b38;
+  --input: #33333f;
+  --ring: #ff7a4f;
+  --radius: 0.875rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-indigo: var(--indigo);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    /* A faint film grain keeps the large black areas matte rather than glossy. */
+    background-color: var(--background);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    color: var(--foreground);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Figures in tables and results line up on the decimal point. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/*
+ * Scroll reveal (components/common/Reveal.tsx). Content starts hidden only when
+ * the document carries `.js`, set by an inline script in the root layout, so a
+ * visitor without JavaScript still sees everything.
+ */
+@layer components {
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .js .reveal[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
