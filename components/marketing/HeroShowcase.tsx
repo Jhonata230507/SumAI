@@ -59,7 +59,7 @@ export function HeroShowcase({ country, t }: { country: CountryConfig; t: Dictio
   const c = t.home.cards
 
   return (
-    <div className="relative mx-auto mt-12 h-[380px] max-w-[760px] [perspective:1600px]">
+    <div className="relative mx-auto mt-12 h-[380px] max-w-[760px] [@media(max-height:860px)]:mt-6 [perspective:1600px]">
       {/* Left card — benchmark rates. Hidden on small screens. Hover pulls it
           forward and flattens the tilt so it can be read. */}
       <div
@@ -220,7 +220,7 @@ function Kpi({
         {swatch && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: swatch }} />}
         {label}
       </p>
-      <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-white">{value}</p>
+      <p className="mt-0.5 whitespace-nowrap text-[13px] font-semibold tracking-tight tabular-nums text-white">{value}</p>
     </div>
   )
 }

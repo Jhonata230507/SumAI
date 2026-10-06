@@ -34,6 +34,8 @@
   --input: #33333f;
   --ring: #ff7a4f;
   --radius: 0.875rem;
+  /* Faint film grain that keeps large dark areas matte. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @theme inline {
@@ -70,7 +72,7 @@
   body {
     /* A faint film grain keeps the large black areas matte rather than glossy. */
     background-color: var(--background);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: var(--grain);
     color: var(--foreground);
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
@@ -78,6 +80,12 @@
 
   html {
     scroll-behavior: smooth;
+  }
+
+  /* An opaque surface that looks exactly like the page — for layers that slide over content. */
+  .surface-page {
+    background-color: var(--background);
+    background-image: var(--grain);
   }
 
   /* Figures in tables and results line up on the decimal point. */
@@ -106,7 +114,32 @@
     transform: none;
   }
 
+  @keyframes scroll-cue-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(6px); }
+  }
+
+  @keyframes scroll-cue-dot {
+    0% { transform: translateY(0); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(10px); opacity: 0; }
+  }
+
+  .scroll-cue-float {
+    animation: scroll-cue-float 2.4s ease-in-out infinite;
+  }
+
+  .scroll-cue-dot {
+    animation: scroll-cue-dot 1.8s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .scroll-cue-float,
+    .scroll-cue-dot {
+      animation: none;
+    }
+
     .js .reveal {
       opacity: 1;
       transform: none;

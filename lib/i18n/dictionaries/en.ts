@@ -171,6 +171,34 @@ export const en = {
     },
     subtitle: 'Financial calculators that show what every number means.',
     browse: 'Browse calculators',
+    scrollHint: 'Scroll to explore',
+    carousel: {
+      title: 'Every money decision, worked out.',
+      viewAll: 'View all calculators',
+      previous: 'Previous calculators',
+      next: 'Next calculators',
+      open: (name: string) => `Open the ${name}`,
+      cards: {
+        loan: {
+          body: 'Your payment, the total interest and the exact payoff date — and what paying a little extra each month changes.',
+        },
+        mortgage: {
+          body: 'Principal, interest, property tax, insurance and building fees in one number, plus how much home your income supports.',
+        },
+        'car-loan': {
+          body: 'Tax, fees and your trade-in included, with the month you finally owe less than the car is worth.',
+        },
+        investment: {
+          body: 'See what monthly contributions grow into after fees, and what that will be worth in today’s money.',
+        },
+        savings: {
+          body: 'Grow a balance at your bank’s real yield, or work back from a target to what you need to set aside.',
+        },
+        'debt-payoff': {
+          body: 'Line up every card and loan, then compare avalanche and snowball to see which saves more and which clears debts first.',
+        },
+      } as Record<string, { body: string }>,
+    },
     principles: [
       {
         title: 'The maths is deterministic',

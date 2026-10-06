@@ -170,6 +170,34 @@ export const es: Dictionary = {
     },
     subtitle: 'Calculadoras financieras que te muestran qué significa cada número.',
     browse: 'Ver calculadoras',
+    scrollHint: 'Desliza para explorar',
+    carousel: {
+      title: 'Cada decisión de dinero, con sus cuentas.',
+      viewAll: 'Ver todas las calculadoras',
+      previous: 'Calculadoras anteriores',
+      next: 'Siguientes calculadoras',
+      open: (name: string) => `Abrir la ${name.toLowerCase()}`,
+      cards: {
+        loan: {
+          body: 'Tu cuota, el total de intereses y la fecha exacta de pago — y lo que cambia si abonas un poco más cada mes.',
+        },
+        mortgage: {
+          body: 'Capital, intereses, predial, seguros y administración en una sola cifra, y cuánta vivienda te alcanza con tus ingresos.',
+        },
+        'car-loan': {
+          body: 'Impuestos, gastos y tu retoma incluidos, con el mes en que por fin debes menos de lo que vale el carro.',
+        },
+        investment: {
+          body: 'Descubre en qué se convierten tus aportes mensuales después de comisiones, y cuánto valdrán en dinero de hoy.',
+        },
+        savings: {
+          body: 'Haz crecer tu saldo con el rendimiento real de tu banco, o calcula al revés cuánto debes ahorrar cada mes.',
+        },
+        'debt-payoff': {
+          body: 'Reúne todas tus tarjetas y créditos, y compara avalancha y bola de nieve para ver cuál ahorra más y cuál cierra deudas antes.',
+        },
+      },
+    },
     principles: [
       {
         title: 'Las cuentas son exactas',
