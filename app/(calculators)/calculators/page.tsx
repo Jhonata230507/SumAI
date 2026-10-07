@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { CALCULATOR_CATEGORIES, calculatorsByCategory } from '@/data/calculators/definitions'
 import { getRequestContext } from '@/lib/i18n/server'
 import { Reveal } from '@/components/common/Reveal'
+import { CalculatorArt } from '@/components/marketing/CalculatorArt'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getRequestContext()
@@ -31,11 +32,18 @@ export default async function CalculatorsPage() {
               {calculatorsByCategory(category.id).map((calculator) => {
                 const text = t.calculators[calculator.id]
                 return (
-                  <Link key={calculator.id} href={`/calculators/${calculator.slug}`} className="group">
-                    <Card className="h-full transition-colors group-hover:border-primary/40">
-                      <CardContent className="p-6">
-                        <p className="font-medium">{text.title}</p>
-                        <p className="mt-1.5 text-sm text-muted-foreground">{text.description}</p>
+                  <Link key={calculator.id} href={`/calculators/${calculator.slug}`} className="group block h-full">
+                    {/* Same card language as the home carousel: lit border and a small lift on hover. */}
+                    <Card className="flex h-full flex-col overflow-hidden rounded-[1.75rem] border-white/[0.06] transition-[border-color,transform] duration-300 group-hover:-translate-y-1 group-hover:border-white/25">
+                      <CardContent className="flex flex-1 flex-col p-6">
+                        <p className="text-lg font-semibold tracking-tight">{text.title}</p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{text.description}</p>
+
+                        <CalculatorArt
+                          id={calculator.id}
+                          className="mt-auto w-full pt-6 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                        />
+
                         <span className="mt-4 inline-flex items-center gap-1 text-sm text-primary">
                           {t.calculatorIndex.openCalculator}
                           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />

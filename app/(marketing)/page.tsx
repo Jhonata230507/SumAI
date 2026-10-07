@@ -4,6 +4,8 @@ import { ScrollCue } from '@/components/marketing/ScrollCue'
 import { HeroStage } from '@/components/marketing/HeroStage'
 import { HeroSnap } from '@/components/marketing/HeroSnap'
 import { CalculatorCarousel } from '@/components/marketing/CalculatorCarousel'
+import { Testimonials } from '@/components/marketing/Testimonials'
+import { Advantages } from '@/components/marketing/Advantages'
 import { Reveal } from '@/components/common/Reveal'
 
 
@@ -52,16 +54,10 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      <section className="border-y bg-card">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 md:grid-cols-3">
-          {t.home.principles.map((principle, index) => (
-            <Reveal key={principle.title} delay={index * 90}>
-              <h2 className="font-semibold">{principle.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{principle.body}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      <Advantages country={country} t={t} />
+
+      {/* The principles section (components/marketing/Principles) is hidden for now. */}
+      <Testimonials />
       </div>
     </>
   )

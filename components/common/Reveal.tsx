@@ -12,12 +12,20 @@ export interface RevealProps {
 }
 
 /**
- * Fades and lifts its content in the first time it scrolls into view.
+ * Fades and lifts its content in whenever it scrolls into view.
  *
  * The hidden starting state only applies once the root layout's inline script
  * has marked the document with `.js`, so without JavaScript nothing stays
  * hidden. Reduced-motion users get the content immediately (see globals.css).
- * The effect runs once per element: scrolling back up does not replay it.
+ * The effect replays: once an element has left the screen completely it resets,
+ * so it animates in again the next time it is scrolled to, from either
+ * direction. It plays once the element is a fifth of the way up the screen,
+ * so the motion happens where the eye is, not at the very bottom edge.
+ * Resetting only when fully out of view keeps it from flickering while it sits
+ * at the edge of the screen.
+ *
+ * Content pinned in place (the home hero) never leaves the screen, so its
+ * container resets it instead — see HeroStage.
  */
 export function Reveal({ children, delay = 0, className, as: Tag = 'div' }: RevealProps) {
   const ref = useRef<HTMLElement>(null)
@@ -28,11 +36,10 @@ export function Reveal({ children, delay = 0, className, as: Tag = 'div' }: Reve
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return
-        node.dataset.visible = 'true'
-        observer.disconnect()
+        if (entry.intersectionRatio >= 0.12) node.dataset.visible = 'true'
+        else if (!entry.isIntersecting) delete node.dataset.visible
       },
-      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' },
+      { threshold: [0, 0.12], rootMargin: '0px 0px -20% 0px' },
     )
 
     observer.observe(node)

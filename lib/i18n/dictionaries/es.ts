@@ -171,6 +171,44 @@ export const es: Dictionary = {
     subtitle: 'Calculadoras financieras que te muestran qué significa cada número.',
     browse: 'Ver calculadoras',
     scrollHint: 'Desliza para explorar',
+    advantages: {
+      titleLead: 'Por qué SumAI',
+      titleEmphasis: 'juega a tu favor.',
+      tablist: 'Por qué SumAI',
+      previous: 'Razón anterior',
+      next: 'Siguiente razón',
+      position: (current: number, total: number) => `${current} de ${total}`,
+      rate: {
+        title: 'Buscamos la mejor tasa de interés',
+        body: 'Seguimos las tasas de las entidades de tu mercado y te mostramos la más baja a la que puedes acceder — expresada como se usa en tu país, para que compares siempre en igualdad de condiciones.',
+        tab: 'La mejor tasa',
+        cta: 'Comparar tasas',
+        lender: (letter: string) => `Entidad ${letter}`,
+        best: 'Mejor tasa',
+        note: 'Tasas ilustrativas',
+      },
+      fit: {
+        title: 'Comparamos todos los créditos para mostrarte el que mejor se ajusta a ti',
+        body: 'La tasa es solo una parte del costo. Evaluamos comisiones, plazo y requisitos frente a tus números, y te mostramos el crédito que mejor te conviene — no el que paga por aparecer.',
+        tab: 'El crédito para ti',
+        cta: 'Comparar ofertas',
+        heading: 'Tu mejor opción',
+        criteria: ['Menor costo total', 'Sin comisiones ocultas', 'Plazo a tu medida', 'Requisitos que cumples'],
+        verdict: 'El que mejor se ajusta a ti',
+      },
+      eligibility: {
+        tab: 'Dónde calificas',
+        title: 'Te decimos dónde calificas antes de solicitar',
+        body: 'Agrega tus ingresos y tu puntaje de crédito y los comparamos con los requisitos de cada entidad, para que solo solicites donde es probable que te aprueben. Nada de esto toca tu historial crediticio.',
+        cta: 'Ver dónde califico',
+        profile: 'Tu perfil',
+        income: 'Ingreso mensual',
+        score: 'Puntaje de crédito',
+        debt: 'Endeudamiento',
+        likely: 'Probablemente calificas',
+        unlikely: 'Puede que no califiques',
+      },
+    },
     carousel: {
       title: 'Cada decisión de dinero, con sus cuentas.',
       viewAll: 'Ver todas las calculadoras',
@@ -197,6 +235,43 @@ export const es: Dictionary = {
           body: 'Reúne todas tus tarjetas y créditos, y compara avalancha y bola de nieve para ver cuál ahorra más y cuál cierra deudas antes.',
         },
       },
+    },
+    // Testimonios de ejemplo hasta tener comentarios reales de clientes; la
+    // sección muestra la nota `sample` mientras estén.
+    testimonials: {
+      eyebrow: 'Lo que dicen',
+      title: 'Decisiones que se sienten bien',
+      sample: 'Testimonios de ejemplo',
+      previous: 'Testimonio anterior',
+      next: 'Siguiente testimonio',
+      show: (name: string) => `Ver lo que dijo ${name}`,
+      items: [
+        {
+          name: 'Daniel Restrepo',
+          role: 'Compró su primera vivienda',
+          quote: 'Por fin entendí cuánto me iba a costar el crédito hipotecario de verdad, no solo la cuota mensual.',
+        },
+        {
+          name: 'Andrés Gómez',
+          role: 'Pagando dos tarjetas de crédito',
+          quote: 'Ver la avalancha y la bola de nieve lado a lado hizo obvia la decisión. Saldré de deudas un año antes.',
+        },
+        {
+          name: 'Valentina Ortiz',
+          role: 'Gerente comercial',
+          quote: 'SumAI me mostró un crédito dos puntos más barato que el que me ofrecía mi banco, y me explicó por qué.',
+        },
+        {
+          name: 'Sofía Ramírez',
+          role: 'Ahorrando para un año sabático',
+          quote: 'La calculadora de ahorro convirtió una meta vaga en un monto que separo cada mes.',
+        },
+        {
+          name: 'Laura Castillo',
+          role: 'Comprando su primer carro',
+          quote: 'Supe dónde calificaba antes de solicitar, así que solicité una sola vez y me aprobaron.',
+        },
+      ],
     },
     principles: [
       {

@@ -119,7 +119,7 @@ export function CalculatorCarousel() {
   )
 }
 
-function CarouselButton({
+export function CarouselButton({
   label,
   disabled,
   onClick,

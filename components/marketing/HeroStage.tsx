@@ -39,8 +39,15 @@ export function HeroStage({
     // Pin the hero exactly where it starts, so it never slides under the top bar,
     // and make it reach the bottom of the first screen from there.
     const fit = () => {
+      // Measure the resting position with sticky switched off for that instant.
+      // While the hero is pinned, its on-screen top no longer reflects where it
+      // rests, so measuring it then — e.g. after a refresh that restores the
+      // scroll position — would pin it far down the page and it would never
+      // come back into view when scrolling up.
+      node.style.position = 'relative'
       node.style.top = '0px'
       const offset = Math.round(node.getBoundingClientRect().top + window.scrollY)
+      node.style.position = ''
       node.style.top = `${offset}px`
       node.style.minHeight = `calc(100dvh - ${offset}px)`
     }
@@ -57,6 +64,17 @@ export function HeroStage({
       // 0 at the top of the page, 1 once a full hero height has scrolled past.
       const progress = Math.min(1, Math.max(0, window.scrollY / Math.max(node.offsetHeight, 1)))
       node.style.setProperty('--recede', progress.toFixed(4))
+
+      // The pinned hero never leaves the screen, so Reveal would never reset it.
+      // Reset its reveals once the sheet has covered it, and play them again
+      // as the visitor scrolls back up and it is uncovered.
+      if (progress >= 0.98 || progress < 0.6) {
+        const covered = progress >= 0.98
+        node.querySelectorAll<HTMLElement>('.reveal').forEach((el) => {
+          if (covered) delete el.dataset.visible
+          else el.dataset.visible = 'true'
+        })
+      }
     }
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)

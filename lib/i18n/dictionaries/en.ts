@@ -172,6 +172,44 @@ export const en = {
     subtitle: 'Financial calculators that show what every number means.',
     browse: 'Browse calculators',
     scrollHint: 'Scroll to explore',
+    advantages: {
+      titleLead: 'Why SumAI works',
+      titleEmphasis: 'in your favour.',
+      tablist: 'Why SumAI',
+      previous: 'Previous reason',
+      next: 'Next reason',
+      position: (current: number, total: number) => `${current} of ${total}`,
+      rate: {
+        title: 'We look for the best interest rate',
+        body: 'We track rates from lenders in your market and surface the lowest one you can get — quoted the way your country quotes it, so you always compare like with like.',
+        tab: 'Best interest rate',
+        cta: 'Compare rates',
+        lender: (letter: string) => `Lender ${letter}`,
+        best: 'Best rate',
+        note: 'Illustrative rates',
+      },
+      fit: {
+        title: 'We compare every credit to find your best fit',
+        body: 'The rate is only part of the cost. We weigh fees, term and requirements against your numbers, and show you the credit that fits you best — not the one paying for placement.',
+        tab: 'Best fit for you',
+        cta: 'Compare offers',
+        heading: 'Your best match',
+        criteria: ['Lowest total cost', 'No hidden fees', 'Term that suits you', 'Requirements you meet'],
+        verdict: 'Best fit for you',
+      },
+      eligibility: {
+        tab: 'Know where you qualify',
+        title: 'We tell you where you qualify before you apply',
+        body: 'Add your income and credit score and we check them against each lender’s requirements, so you only apply where you are likely to be approved. Nothing here touches your credit report.',
+        cta: 'See where you qualify',
+        profile: 'Your profile',
+        income: 'Monthly income',
+        score: 'Credit score',
+        debt: 'Debt-to-income',
+        likely: 'Likely eligible',
+        unlikely: 'May not qualify',
+      },
+    },
     carousel: {
       title: 'Every money decision, worked out.',
       viewAll: 'View all calculators',
@@ -198,6 +236,43 @@ export const en = {
           body: 'Line up every card and loan, then compare avalanche and snowball to see which saves more and which clears debts first.',
         },
       } as Record<string, { body: string }>,
+    },
+    // Placeholder testimonials until real customer feedback is collected; the
+    // section shows the `sample` note while these are in place.
+    testimonials: {
+      eyebrow: 'What people say',
+      title: 'Decisions people feel good about',
+      sample: 'Sample testimonials',
+      previous: 'Previous testimonial',
+      next: 'Next testimonial',
+      show: (name: string) => `Show what ${name} said`,
+      items: [
+        {
+          name: 'Daniel Brooks',
+          role: 'First-time home buyer',
+          quote: 'I finally understood what my mortgage would really cost me — not just the monthly payment, the whole thing.',
+        },
+        {
+          name: 'Marcus Lee',
+          role: 'Paying off two credit cards',
+          quote: 'Seeing avalanche against snowball side by side made the choice obvious. I will be debt-free a year sooner.',
+        },
+        {
+          name: 'Emily Watson',
+          role: 'Sales manager',
+          quote: 'SumAI showed me a loan two points cheaper than the one my bank offered, and explained exactly why.',
+        },
+        {
+          name: 'Sofia Ramirez',
+          role: 'Saving for a sabbatical',
+          quote: 'The savings calculator turned a vague goal into a number I put aside every month.',
+        },
+        {
+          name: 'Hannah Cole',
+          role: 'Buying her first car',
+          quote: 'I knew where I would qualify before applying, so I applied once — and got approved.',
+        },
+      ],
     },
     principles: [
       {
