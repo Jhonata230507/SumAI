@@ -12,7 +12,8 @@
     "carLoanUsed": 0.1925,
     "personalLoan": 0.2215,
     "savingsHighYield": 0.0925,
-    "inflation": 0.052
+    "inflation": 0.052,
+    "mortgageUvr": 0.075
   },
   "rules": {
     "minDownPaymentRatio": 0.3,

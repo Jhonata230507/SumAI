@@ -52,21 +52,16 @@ export function CalculatorForm({
           )}
 
           {(onReset || onSave) && (
-            <div className="flex gap-2 border-t pt-4">
+            <div data-form-actions className="flex gap-2 border-t pt-4">
               {onSave && (
                 <Button type="button" onClick={onSave} disabled={saving} className="flex-1">
                   {saving ? t.common.saving : t.calculatorForm.saveScenario}
                 </Button>
               )}
               {onReset && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={onReset}
-                  aria-label={t.common.reset}
-                >
-                  <RotateCcw className="h-4 w-4" />
+                <Button type="button" variant="outline" onClick={onReset} className="flex-1 gap-2">
+                  <RotateCcw className="h-4 w-4" aria-hidden />
+                  {t.common.restart}
                 </Button>
               )}
             </div>

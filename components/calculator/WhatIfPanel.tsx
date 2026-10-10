@@ -1,10 +1,12 @@
 'use client'
 
+import { Check } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CurrencyDisplay } from '@/components/common/CurrencyDisplay'
 import { formatMonths } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
+import { cn } from '@/lib/utils/cn'
 import type { CurrencyCode } from '@/types/currency'
 
 export interface WhatIfOption {
@@ -24,6 +26,10 @@ export interface WhatIfPanelProps {
   options: WhatIfOption[]
   currency: CurrencyCode
   onApply?: (id: string) => void
+  /** The applied option, if any. Clicking it again undoes it (the page decides how). */
+  selectedId?: string | null
+  /** Lay the options out in two columns on wide screens, for a full-width placement. */
+  wide?: boolean
 }
 
 /**
@@ -31,9 +37,14 @@ export interface WhatIfPanelProps {
  *
  * Each row states the trade-off rather than just the saving: paying a loan off
  * faster costs more per month, and hiding that would make the panel dishonest.
+ *
+ * One option at a time (see useWhatIf): the applied one is marked, keeps its
+ * comparison against the numbers it replaced, and undoes itself on a second
+ * click.
  */
-export function WhatIfPanel({ options, currency, onApply }: WhatIfPanelProps) {
+export function WhatIfPanel({ options, currency, onApply, selectedId = null, wide = false }: WhatIfPanelProps) {
   const { t, locale } = useI18n()
+
   if (options.length === 0) return null
 
   return (
@@ -42,10 +53,11 @@ export function WhatIfPanel({ options, currency, onApply }: WhatIfPanelProps) {
         <CardTitle className="text-base">{t.whatIf.title}</CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-2">
+      <CardContent className={wide ? 'grid gap-2 lg:grid-cols-2' : 'space-y-2'}>
         {options.map((option) => {
           const saves = option.costDelta < 0
           const text = t.whatIf.options[option.id] ?? option
+          const isApplied = selectedId === option.id
 
           return (
             <button
@@ -53,35 +65,39 @@ export function WhatIfPanel({ options, currency, onApply }: WhatIfPanelProps) {
               type="button"
               onClick={() => onApply?.(option.id)}
               disabled={!onApply}
-              className="flex w-full items-start gap-4 rounded-lg border p-3 text-left transition-colors hover:bg-accent/50 disabled:cursor-default disabled:hover:bg-transparent"
+              aria-pressed={isApplied}
+              className={cn(
+                'flex w-full items-start gap-4 rounded-lg border p-3 text-left transition-colors disabled:cursor-default',
+                isApplied ? 'border-primary/60 bg-primary/[0.07]' : 'hover:bg-accent/50 disabled:hover:bg-transparent',
+              )}
             >
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">{text.label}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{text.description}</p>
 
+                {isApplied && <p className="mt-1.5 text-xs text-primary">{t.whatIf.undo}</p>}
+
                 {option.paymentDelta !== undefined && option.paymentDelta !== 0 && (
                   <p className="mt-1.5 text-xs text-muted-foreground">
                     {t.whatIf.paymentChangesBy}{' '}
-                    <CurrencyDisplay
-                      value={option.paymentDelta}
-                      currency={currency}
-                      delta
-                      betterDirection="lower"
-                    />
+                    <CurrencyDisplay value={option.paymentDelta} currency={currency} delta betterDirection="lower" />
                   </p>
                 )}
               </div>
 
               <div className="shrink-0 text-right">
-                <Badge variant={saves ? 'success' : 'warning'}>
-                  {saves ? t.whatIf.saves : t.whatIf.costs}{' '}
-                  <CurrencyDisplay
-                    value={Math.abs(option.costDelta)}
-                    currency={currency}
-                    compact
-                    className="ml-1"
-                  />
-                </Badge>
+                <div className="flex flex-col items-end gap-1.5">
+                  {isApplied && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
+                      <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                      {t.whatIf.applied}
+                    </span>
+                  )}
+                  <Badge variant={saves ? 'success' : 'warning'}>
+                    {saves ? t.whatIf.saves : t.whatIf.costs}{' '}
+                    <CurrencyDisplay value={Math.abs(option.costDelta)} currency={currency} compact className="ml-1" />
+                  </Badge>
+                </div>
 
                 {option.periodsDelta !== undefined && option.periodsDelta !== 0 && (
                   <p className="mt-1 text-xs text-muted-foreground">

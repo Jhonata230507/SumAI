@@ -1,3 +1,4 @@
+import { defaultAmountScale } from '@/lib/countries'
 import { calculateMortgage } from './calculation'
 import type { MortgageInput, MortgageResult } from './types'
 
@@ -27,7 +28,8 @@ export function buildMortgageScenarios(base: MortgageInput): MortgageScenario[] 
       id: 'extra-200',
       label: 'Extra toward principal',
       description: 'An additional amount applied to principal every month',
-      apply: (i: MortgageInput) => ({ ...i, extraPayment: 200 }),
+      // 200 a month in the US; the same weight in the local currency elsewhere (800.000 COP).
+      apply: (i: MortgageInput) => ({ ...i, extraPayment: 200 * defaultAmountScale(i.countryCode) }),
     },
     {
       id: 'rate-drop',

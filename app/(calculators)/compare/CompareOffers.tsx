@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { TermInput } from '@/components/common/TermInput'
 import { ComparisonChart } from '@/components/charts/ComparisonChart'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { RateInput } from '@/components/common/RateInput'
@@ -28,7 +27,6 @@ export interface CompareOffersProps {
   initialOffers: Offer[]
 }
 
-const TERMS = [12, 24, 36, 48, 60, 72, 84]
 
 export function CompareOffers({ country, amount: initialAmount, initialOffers }: CompareOffersProps) {
   const { t } = useI18n()
@@ -91,18 +89,13 @@ export function CompareOffers({ country, amount: initialAmount, initialOffers }:
                   value={offer.annualRate}
                   onChange={(v) => update(offer.id, { annualRate: v })}
                 />
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${offer.id}-term`}>{t.compare.term}</Label>
-                  <Select
-                    id={`${offer.id}-term`}
-                    value={String(offer.termMonths)}
-                    options={TERMS.map((months) => ({
-                      value: String(months),
-                      label: t.compare.termOption(months),
-                    }))}
-                    onChange={(e) => update(offer.id, { termMonths: Number(e.target.value) })}
-                  />
-                </div>
+                <TermInput
+                  id={`${offer.id}-term`}
+                  label={t.compare.term}
+                  months={offer.termMonths}
+                  defaultUnit="months"
+                  onChange={(months) => update(offer.id, { termMonths: months })}
+                />
                 <CurrencyInput
                   id={`${offer.id}-fee`}
                   label={t.compare.upfrontFees}

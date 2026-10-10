@@ -28,6 +28,9 @@ export default async function CarLoanCalculatorPage() {
     salesTaxRate: getTypicalSalesTax(country.code),
     annualRate: benchmarks.carLoanNew,
     countryCode: country.code,
+    // Colombia has no trade-in, tax or fee fields, so those start at 0 rather than
+    // at an amount the user could not see or change.
+    ...(country.code === 'co' ? { tradeInValue: 0, tradeInOwed: 0, salesTaxRate: 0, feesAndRegistration: 0 } : {}),
   }
 
   return (

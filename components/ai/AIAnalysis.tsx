@@ -54,17 +54,11 @@ export function AIAnalysis({ context, onAsk }: AIAnalysisProps) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-primary" />
           {t.ai.title}
         </CardTitle>
-
-        {!result && !loading && (
-          <Button size="sm" variant="outline" onClick={runAnalysis}>
-            {t.ai.explainButton}
-          </Button>
-        )}
       </CardHeader>
 
       <CardContent>
@@ -111,9 +105,15 @@ export function AIAnalysis({ context, onAsk }: AIAnalysisProps) {
         )}
 
         {!result && !loading && !error && (
-          <p className="text-sm text-muted-foreground">
-            {t.ai.intro} {t.ai.disclaimer}
-          </p>
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {t.ai.intro} {t.ai.disclaimer}
+            </p>
+            {/* Full width under the text: the card is a narrow sidebar on desktop. */}
+            <Button variant="outline" className="w-full" onClick={runAnalysis}>
+              {t.ai.explainButton}
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

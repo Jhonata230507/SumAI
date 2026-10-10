@@ -217,6 +217,27 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
           </Card>
         </>
       }
+      assistant={
+        <AIAnalysis
+          context={{
+            calculatorId: 'debt-payoff',
+            countryCode: country.code,
+            currency: result.currency,
+            inputs: {
+              strategy: committed.strategy,
+              monthlyBudget: committed.monthlyBudget,
+              debtCount: committed.debts.length,
+              totalBalance: committed.debts.reduce((s, d) => s + d.balance, 0),
+            },
+            results: {
+              monthsToDebtFree: result.monthsToDebtFree,
+              totalInterest: result.totalInterest,
+              avalancheInterest: comparison.avalanche.totalInterest,
+              snowballInterest: comparison.snowball.totalInterest,
+            },
+          }}
+        />
+      }
       detail={
         <>
           <Card>
@@ -250,25 +271,6 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
             </CardContent>
           </Card>
 
-          <AIAnalysis
-            context={{
-              calculatorId: 'debt-payoff',
-              countryCode: country.code,
-              currency: result.currency,
-              inputs: {
-                strategy: committed.strategy,
-                monthlyBudget: committed.monthlyBudget,
-                debtCount: committed.debts.length,
-                totalBalance: committed.debts.reduce((s, d) => s + d.balance, 0),
-              },
-              results: {
-                monthsToDebtFree: result.monthsToDebtFree,
-                totalInterest: result.totalInterest,
-                avalancheInterest: comparison.avalanche.totalInterest,
-                snowballInterest: comparison.snowball.totalInterest,
-              },
-            }}
-          />
         </>
       }
     />

@@ -1,6 +1,7 @@
 import type { CountryCode } from '@/types/country'
 import type { CurrencyCode } from '@/types/common'
 import type { AmortizationSchedule } from '@/lib/calculations/amortization'
+import type { CreditBand, InsuranceDuration, LoanType } from './us'
 
 export interface MortgageInput {
   homePrice: number
@@ -15,6 +16,17 @@ export interface MortgageInput {
   mortgageInsuranceRate: number
   extraPayment: number
   countryCode: CountryCode
+  /*
+   * US only. With a loan type, its program rules set the upfront fee and the
+   * mortgage insurance; without one, the country threshold rule applies.
+   */
+  loanType?: LoanType
+  creditBand?: CreditBand | null
+  zip?: string
+  /** Gross household income, per year. */
+  annualIncome?: number
+  /** Other monthly debt payments: car, student loans, card minimums. */
+  monthlyDebts?: number
 }
 
 /** The monthly bill, broken into what the lender takes and what it passes through. */
@@ -43,6 +55,13 @@ export interface MortgageResult {
   mortgageInsuranceEndsPeriod: number | null
   currency: CurrencyCode
   schedule: AmortizationSchedule
+  /** Upfront program fee (FHA MIP, VA funding fee, USDA guarantee) financed into the loan. */
+  upfrontFee: number
+  insuranceDuration: InsuranceDuration | null
+  /** The program minimum down payment, when a loan type is set. */
+  minDownRatio: number | null
+  /** Debt-to-income, when income is known: housing only, and housing plus other debts. */
+  debtToIncome: { front: number; back: number; frontLimit: number | null; backLimit: number } | null
 }
 
 export interface AffordabilityInput {

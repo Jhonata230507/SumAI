@@ -3,6 +3,7 @@ import { toPeriodicRate } from '@/lib/calculations/interest'
 import { principalFromPayment } from '@/lib/calculations/payment'
 import { roundMoney, roundTo } from '@/lib/calculations/rounding'
 import { getCountry } from '@/lib/countries'
+import { loanRules } from './us'
 import type {
   AffordabilityInput,
   AffordabilityResult,
@@ -17,8 +18,19 @@ const EQUITY_THRESHOLD = 0.8
 
 export function calculateMortgage(input: MortgageInput): MortgageResult {
   const country = getCountry(input.countryCode)
-  const loanAmount = roundMoney(input.homePrice - input.downPayment)
+  const baseLoan = roundMoney(input.homePrice - input.downPayment)
   const downPaymentRatio = roundTo(input.downPayment / input.homePrice, 4)
+  // US loan types bring their own program rules; elsewhere the country rule applies.
+  const rules = input.loanType
+    ? loanRules({
+        loanType: input.loanType,
+        downRatio: downPaymentRatio,
+        termMonths: input.termMonths,
+        creditBand: input.creditBand ?? null,
+      })
+    : null
+  const upfrontFee = rules ? roundMoney(baseLoan * rules.upfrontFeeRate) : 0
+  const loanAmount = roundMoney(baseLoan + upfrontFee)
 
   const periodicRate = toPeriodicRate(
     input.annualRate,
@@ -33,10 +45,11 @@ export function calculateMortgage(input: MortgageInput): MortgageResult {
     extraPerPeriod: input.extraPayment,
   })
 
-  const requiresMortgageInsurance = downPaymentRatio < country.rules.minDownPaymentRatio
-  const mortgageInsurance = requiresMortgageInsurance
-    ? roundMoney((loanAmount * input.mortgageInsuranceRate) / 12)
-    : 0
+  const requiresMortgageInsurance = rules
+    ? rules.annualInsuranceRate > 0
+    : downPaymentRatio < country.rules.minDownPaymentRatio
+  const insuranceRate = rules ? rules.annualInsuranceRate : input.mortgageInsuranceRate
+  const mortgageInsurance = requiresMortgageInsurance ? roundMoney((loanAmount * insuranceRate) / 12) : 0
 
   const monthly: MonthlyBreakdown = {
     principalAndInterest: schedule.payment,
@@ -66,11 +79,27 @@ export function calculateMortgage(input: MortgageInput): MortgageResult {
     periodsSaved: schedule.periodsSaved,
     interestSaved: schedule.interestSaved,
     requiresMortgageInsurance,
-    mortgageInsuranceEndsPeriod: requiresMortgageInsurance
-      ? findEquityCrossover(schedule.rows, input.homePrice)
-      : null,
+    mortgageInsuranceEndsPeriod: !requiresMortgageInsurance
+      ? null
+      : rules?.insuranceDuration.kind === 'months'
+        ? rules.insuranceDuration.months
+        : rules?.insuranceDuration.kind === 'life'
+          ? null
+          : findEquityCrossover(schedule.rows, input.homePrice),
     currency: country.currency,
     schedule,
+    upfrontFee,
+    insuranceDuration: rules && requiresMortgageInsurance ? rules.insuranceDuration : null,
+    minDownRatio: rules ? rules.minDownRatio : null,
+    debtToIncome:
+      input.annualIncome && input.annualIncome > 0
+        ? {
+            front: roundTo(monthly.total / (input.annualIncome / 12), 4),
+            back: roundTo((monthly.total + (input.monthlyDebts ?? 0)) / (input.annualIncome / 12), 4),
+            frontLimit: rules?.frontLimit ?? null,
+            backLimit: rules?.backLimit ?? country.rules.maxDebtToIncome,
+          }
+        : null,
   }
 }
 

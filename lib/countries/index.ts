@@ -54,6 +54,8 @@ export interface CountryBenchmarks {
   personalLoan: number
   savingsHighYield: number
   inflation: number
+  /** Real rate of a UVR home loan (charged on top of the UVR). Colombia only. */
+  mortgageUvr?: number
 }
 
 const BENCHMARKS: Record<CountryCode, CountryBenchmarks> = {

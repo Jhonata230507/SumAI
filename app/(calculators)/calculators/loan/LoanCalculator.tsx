@@ -10,11 +10,13 @@ import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { RateInput } from '@/components/common/RateInput'
 import { Label } from '@/components/ui/label'
+import { TermInput } from '@/components/common/TermInput'
 import { Select } from '@/components/ui/select'
 import { calculateLoan } from '@/features/calculators/loan/calculation'
 import { loanSchema, type LoanSchema } from '@/features/calculators/loan/schema'
 import { buildLoanScenarios, scenarioSavings } from '@/features/calculators/loan/scenarios'
 import { useCalculator } from '@/features/calculators/use-calculator'
+import { useWhatIf } from '@/features/calculators/use-what-if'
 import { useI18n } from '@/lib/i18n/client'
 import { FREQUENCY_PER_YEAR, type Frequency } from '@/types/common'
 import type { CountryConfig } from '@/types/country'
@@ -26,21 +28,19 @@ export interface LoanCalculatorProps {
   related: ReactNode
 }
 
-const TERMS = [12, 24, 36, 48, 60, 72, 84, 120]
 const FREQUENCIES: Frequency[] = ['monthly', 'biweekly', 'weekly']
 
 export function LoanCalculator({ country, initial, header, related }: LoanCalculatorProps) {
   const { t } = useI18n()
-  const { input, committed, errors, result, set, update, reset } = useCalculator(
-    loanSchema,
-    calculateLoan,
-    initial,
-  )
+  const { input, committed, errors, result, set, update, reset } = useCalculator(loanSchema, calculateLoan, initial)
 
-  const scenarios = useMemo(() => buildLoanScenarios(committed), [committed])
+  // "What if" options: one at a time, compared against the numbers they replace.
+  const whatIfState = useWhatIf(committed, buildLoanScenarios, update)
+  const { scenarios } = whatIfState
+  const baseResult = useMemo(() => calculateLoan(whatIfState.base), [whatIfState.base])
 
   const whatIfs = scenarios.map((scenario) => {
-    const delta = scenarioSavings(result, scenario.result)
+    const delta = scenarioSavings(baseResult, scenario.result)
     return {
       id: scenario.id,
       label: scenario.label,
@@ -109,18 +109,12 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
             onChange={(v) => set('annualRate', v)}
           />
 
-          <div className="space-y-1.5">
-            <Label htmlFor="term">{country.terminology.loanTerm}</Label>
-            <Select
-              id="term"
-              value={String(input.termMonths)}
-              options={TERMS.map((months) => ({
-                value: String(months),
-                label: t.common.years(months / 12),
-              }))}
-              onChange={(e) => set('termMonths', Number(e.target.value))}
-            />
-          </div>
+          <TermInput
+            id="term"
+            label={country.terminology.loanTerm}
+            months={input.termMonths}
+            onChange={(months) => set('termMonths', months)}
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="frequency">{t.loan.frequency}</Label>
@@ -155,16 +149,40 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
       }
       results={
         <>
-          <ResultSummary figures={figures} currency={result.currency} locale={country.locale} />
+          {country.code === 'co' ? (
+            <>
+              {/* Colombia: the payment on its own, the rest of the figures in one card. */}
+              <ResultSummary figures={figures.slice(0, 1)} currency={result.currency} locale={country.locale} />
+              <ResultSummary combined figures={figures.slice(1)} currency={result.currency} locale={country.locale} />
+            </>
+          ) : (
+            <ResultSummary figures={figures} currency={result.currency} locale={country.locale} />
+          )}
           <WhatIfPanel
             options={whatIfs}
             currency={result.currency}
-            onApply={(id) => {
-              const scenario = scenarios.find((s) => s.id === id)
-              if (scenario) update(scenario.input as LoanSchema)
-            }}
+            selectedId={whatIfState.selectedId}
+            onApply={whatIfState.toggle}
           />
         </>
+      }
+      assistant={
+        <AIAnalysis
+          context={{
+            calculatorId: 'loan',
+            countryCode: country.code,
+            currency: result.currency,
+            inputs: { ...committed },
+            results: {
+              payment: result.payment,
+              totalInterest: result.totalInterest,
+              totalPaid: result.totalPaid,
+              effectiveAnnualRate: result.effectiveAnnualRate,
+              payoffPeriods: result.payoffPeriods,
+              costRatio: result.costRatio,
+            },
+          }}
+        />
       }
       detail={
         <>
@@ -172,22 +190,6 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
             rows={result.schedule.rows}
             currency={result.currency}
             periodsPerYear={FREQUENCY_PER_YEAR[committed.frequency]}
-          />
-          <AIAnalysis
-            context={{
-              calculatorId: 'loan',
-              countryCode: country.code,
-              currency: result.currency,
-              inputs: { ...committed },
-              results: {
-                payment: result.payment,
-                totalInterest: result.totalInterest,
-                totalPaid: result.totalPaid,
-                effectiveAnnualRate: result.effectiveAnnualRate,
-                payoffPeriods: result.payoffPeriods,
-                costRatio: result.costRatio,
-              },
-            }}
           />
         </>
       }

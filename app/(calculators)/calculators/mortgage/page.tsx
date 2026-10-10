@@ -5,6 +5,7 @@ import { getCalculator } from '@/data/calculators/definitions'
 import { getRequestContext } from '@/lib/i18n/server'
 import { defaultAmountScale, getBenchmarks } from '@/lib/countries'
 import { mortgageDefaults } from '@/features/calculators/mortgage/schema'
+import { estimateHomeInsurance, estimatePropertyTax, estimateRate } from '@/features/calculators/mortgage/us'
 import { MortgageCalculator } from './MortgageCalculator'
 
 const calculator = getCalculator('mortgage')
@@ -22,17 +23,37 @@ export default async function MortgageCalculatorPage() {
 
   const homePrice = mortgageDefaults.homePrice * scale
 
-  const initial = {
+  const base = {
     ...mortgageDefaults,
     homePrice,
     // Start at the country minimum down payment, so the default is a realistic purchase.
     downPayment: Math.round(homePrice * Math.max(country.rules.minDownPaymentRatio, 0.2)),
-    propertyTaxAnnual: mortgageDefaults.propertyTaxAnnual * scale,
-    homeInsuranceAnnual: mortgageDefaults.homeInsuranceAnnual * scale,
+    // Hidden outside the US, so they start at 0 rather than at an estimate the
+    // user could not see or change.
+    propertyTaxAnnual: 0,
+    homeInsuranceAnnual: 0,
+    hoaMonthly: 0,
     annualRate: benchmarks.mortgage30Year,
     termMonths: country.rules.commonLoanTermsMonths.at(-1) ?? 360,
     countryCode: country.code,
   }
+
+  // US: the full purchase picture — ZIP, income and debts, loan type — with the
+  // rate, property tax and insurance starting as labelled estimates.
+  const initial =
+    country.code === 'us'
+      ? {
+          ...base,
+          loanType: 'conventional' as const,
+          creditBand: null,
+          zip: '',
+          annualIncome: 120_000,
+          monthlyDebts: 500,
+          annualRate: estimateRate({ benchmarks, termMonths: base.termMonths, loanType: 'conventional', creditBand: null }),
+          propertyTaxAnnual: estimatePropertyTax(homePrice, '').annual,
+          homeInsuranceAnnual: estimateHomeInsurance(homePrice),
+        }
+      : base
 
   return (
     <MortgageCalculator

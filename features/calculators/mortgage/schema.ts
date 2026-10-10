@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { CREDIT_BANDS, LOAN_TYPES } from './us'
 import {
   countryCode,
   nonNegativeAmount,
@@ -19,6 +20,11 @@ export const mortgageSchema = z
     mortgageInsuranceRate: rate.default(0.0055),
     extraPayment: nonNegativeAmount.default(0),
     countryCode: countryCode.default('us'),
+    loanType: z.enum(LOAN_TYPES).optional(),
+    creditBand: z.enum(CREDIT_BANDS).nullable().optional(),
+    zip: z.string().optional(),
+    annualIncome: nonNegativeAmount.optional(),
+    monthlyDebts: nonNegativeAmount.optional(),
   })
   .refine((v) => v.downPayment < v.homePrice, {
     message: 'downPaymentBelowPrice',

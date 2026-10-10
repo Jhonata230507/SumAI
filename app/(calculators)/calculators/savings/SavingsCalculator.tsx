@@ -9,6 +9,7 @@ import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { RateInput } from '@/components/common/RateInput'
 import { Label } from '@/components/ui/label'
+import { TermInput } from '@/components/common/TermInput'
 import { Select } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { calculateSavings } from '@/features/calculators/savings/calculation'
@@ -27,7 +28,6 @@ export interface SavingsCalculatorProps {
   related: ReactNode
 }
 
-const HORIZONS = [6, 12, 24, 36, 60, 120]
 const COMPOUNDING = [
   { value: 365, key: 'daily' },
   { value: 12, key: 'monthly' },
@@ -155,15 +155,12 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
           {/* An E.A. quote already includes compounding, so the compounding
               choice only appears where savings rates are quoted nominal. */}
           <div className={country.rules.consumerRatesEffective ? undefined : 'grid grid-cols-2 gap-3'}>
-            <div className="space-y-1.5">
-              <Label htmlFor="horizon">{t.savings.timeFrame}</Label>
-              <Select
-                id="horizon"
-                value={String(input.months)}
-                options={HORIZONS.map((months) => ({ value: String(months), label: duration(months) }))}
-                onChange={(e) => set('months', Number(e.target.value))}
-              />
-            </div>
+            <TermInput
+              id="horizon"
+              label={t.savings.timeFrame}
+              months={input.months}
+              onChange={(months) => set('months', months)}
+            />
             {!country.rules.consumerRatesEffective && (
               <div className="space-y-1.5">
                 <Label htmlFor="compounding">{t.savings.compounding}</Label>
@@ -182,6 +179,24 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
         </CalculatorForm>
       }
       results={<ResultSummary figures={figures} currency={result.currency} locale={locale} />}
+      assistant={
+        <AIAnalysis
+          context={{
+            calculatorId: 'savings',
+            countryCode: country.code,
+            currency: result.currency,
+            inputs: { ...committed, targetAmount: committed.targetAmount ?? 'none' },
+            results: {
+              finalBalance: result.finalBalance,
+              totalDeposited: result.totalDeposited,
+              totalInterest: result.totalInterest,
+              effectiveAnnualYield: result.effectiveAnnualYield,
+              requiredDeposit: result.requiredDeposit ?? 'n/a',
+              reachesTarget: String(result.reachesTarget),
+            },
+          }}
+        />
+      }
       detail={
         <>
           <GrowthChart
@@ -189,22 +204,6 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
             currency={result.currency}
             periodsPerYear={FREQUENCY_PER_YEAR[committed.depositFrequency]}
             caption={t.savings.chartCaption}
-          />
-          <AIAnalysis
-            context={{
-              calculatorId: 'savings',
-              countryCode: country.code,
-              currency: result.currency,
-              inputs: { ...committed, targetAmount: committed.targetAmount ?? 'none' },
-              results: {
-                finalBalance: result.finalBalance,
-                totalDeposited: result.totalDeposited,
-                totalInterest: result.totalInterest,
-                effectiveAnnualYield: result.effectiveAnnualYield,
-                requiredDeposit: result.requiredDeposit ?? 'n/a',
-                reachesTarget: String(result.reachesTarget),
-              },
-            }}
           />
         </>
       }

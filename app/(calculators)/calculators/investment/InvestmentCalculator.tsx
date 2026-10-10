@@ -150,27 +150,29 @@ export function InvestmentCalculator({
           </Card>
         </>
       }
+      assistant={
+        <AIAnalysis
+          context={{
+            calculatorId: 'investment',
+            countryCode: country.code,
+            currency: result.currency,
+            inputs: { ...committed },
+            results: {
+              finalBalance: result.finalBalance,
+              realBalance: result.realBalance,
+              totalContributed: result.totalContributed,
+              totalGrowth: result.totalGrowth,
+              totalFees: result.totalFees,
+            },
+          }}
+        />
+      }
       detail={
         <>
           <GrowthChart
             points={result.series.points}
             currency={result.currency}
             periodsPerYear={FREQUENCY_PER_YEAR[committed.contributionFrequency]}
-          />
-          <AIAnalysis
-            context={{
-              calculatorId: 'investment',
-              countryCode: country.code,
-              currency: result.currency,
-              inputs: { ...committed },
-              results: {
-                finalBalance: result.finalBalance,
-                realBalance: result.realBalance,
-                totalContributed: result.totalContributed,
-                totalGrowth: result.totalGrowth,
-                totalFees: result.totalFees,
-              },
-            }}
           />
         </>
       }

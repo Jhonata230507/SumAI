@@ -82,3 +82,13 @@ describe('calculateAffordability', () => {
     expect(result.maxLoanAmount).toBe(0)
   })
 })
+
+describe('buildMortgageScenarios', () => {
+  it('sizes the extra-principal scenario to the local currency', async () => {
+    const { buildMortgageScenarios } = await import('../scenarios')
+    const extra = (countryCode: 'us' | 'co') =>
+      buildMortgageScenarios({ ...base, countryCode }).find((s) => s.id === 'extra-200')!.input.extraPayment
+    expect(extra('us')).toBe(200)
+    expect(extra('co')).toBe(800_000)
+  })
+})
