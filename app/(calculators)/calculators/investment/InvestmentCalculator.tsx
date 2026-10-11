@@ -19,6 +19,7 @@ import { formatNumber } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
 import { FREQUENCY_PER_YEAR } from '@/types/common'
 import type { CountryConfig } from '@/types/country'
+import { BestOffers } from '@/components/calculator/BestOffers'
 
 export interface InvestmentCalculatorProps {
   country: CountryConfig
@@ -27,17 +28,16 @@ export interface InvestmentCalculatorProps {
   related: ReactNode
 }
 
-export function InvestmentCalculator({
-  country,
-  initial,
-  header,
-  related,
-}: InvestmentCalculatorProps) {
+/** Fields the calculator opens with empty (NaN): the user types their own numbers. */
+const START = { initialAmount: Number.NaN, contribution: Number.NaN, annualReturn: Number.NaN }
+
+export function InvestmentCalculator({ country, initial, header, related }: InvestmentCalculatorProps) {
   const { t } = useI18n()
-  const { input, committed, errors, result, set, reset } = useCalculator(
+  const { input, committed, errors, result, set, ready, reset } = useCalculator(
     investmentSchema,
     calculateInvestment,
     initial,
+    { start: START },
   )
 
   const doubling = yearsToDouble(committed.annualReturn - committed.feeRate)
@@ -45,6 +45,7 @@ export function InvestmentCalculator({
 
   return (
     <CalculatorLayout
+      ready={ready}
       header={header}
       related={related}
       form={
@@ -81,9 +82,10 @@ export function InvestmentCalculator({
             <Slider id="years" min={1} max={50} value={input.years} onChange={(v) => set('years', v)} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
             <PercentageInput
               id="fees"
+              optional
               label={t.investment.fees}
               hint={t.investment.feesHint}
               step={0.01}
@@ -92,6 +94,7 @@ export function InvestmentCalculator({
             />
             <PercentageInput
               id="inflation"
+              optional
               label={t.investment.inflation}
               value={input.inflationRate}
               onChange={(v) => set('inflationRate', v)}
@@ -100,6 +103,7 @@ export function InvestmentCalculator({
 
           <PercentageInput
             id="raise"
+            optional
             label={t.investment.raise}
             value={input.contributionGrowth}
             onChange={(v) => set('contributionGrowth', v)}
@@ -127,7 +131,12 @@ export function InvestmentCalculator({
                 format: 'currency',
                 hint: t.investment.todaysMoneyHint,
               },
-              { key: 'totalContributed', label: t.investment.contributed, value: result.totalContributed, format: 'currency' },
+              {
+                key: 'totalContributed',
+                label: t.investment.contributed,
+                value: result.totalContributed,
+                format: 'currency',
+              },
               { key: 'totalFees', label: t.investment.lostToFees, value: result.totalFees, format: 'currency' },
             ]}
           />
@@ -169,6 +178,9 @@ export function InvestmentCalculator({
       }
       detail={
         <>
+          {/* The best options for the user, right under the results.
+               High-yield savings: the low-risk place to start, next to the projected balance. */}
+          <BestOffers category="savings" country={country} amount={result.finalBalance} />
           <GrowthChart
             points={result.series.points}
             currency={result.currency}

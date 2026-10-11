@@ -9,12 +9,7 @@ export interface LoadingStateProps {
 }
 
 /** Skeletons shaped like the content they stand in for, to avoid layout shift. */
-export function LoadingState({
-  variant = 'card',
-  rows = 3,
-  className,
-  label = 'Loading',
-}: LoadingStateProps) {
+export function LoadingState({ variant = 'card', rows = 3, className, label = 'Loading' }: LoadingStateProps) {
   return (
     <div role="status" aria-busy aria-label={label} className={cn('space-y-3', className)}>
       {variant === 'chart' && <Skeleton className="h-64 w-full" />}
@@ -28,8 +23,7 @@ export function LoadingState({
           </div>
         ))}
 
-      {variant === 'table' &&
-        Array.from({ length: rows }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+      {variant === 'table' && Array.from({ length: rows }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
 
       {variant === 'text' &&
         Array.from({ length: rows }).map((_, i) => (

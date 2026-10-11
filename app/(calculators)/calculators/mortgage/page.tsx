@@ -49,7 +49,12 @@ export default async function MortgageCalculatorPage() {
           zip: '',
           annualIncome: 120_000,
           monthlyDebts: 500,
-          annualRate: estimateRate({ benchmarks, termMonths: base.termMonths, loanType: 'conventional', creditBand: null }),
+          annualRate: estimateRate({
+            benchmarks,
+            termMonths: base.termMonths,
+            loanType: 'conventional',
+            creditBand: null,
+          }),
           propertyTaxAnnual: estimatePropertyTax(homePrice, '').annual,
           homeInsuranceAnnual: estimateHomeInsurance(homePrice),
         }

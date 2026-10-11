@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Reveal } from '@/components/common/Reveal'
+import { EmptyResults } from './EmptyResults'
+import { FormColumn } from './FormColumn'
 
 export interface CalculatorLayoutProps {
   header: ReactNode
@@ -13,11 +15,16 @@ export interface CalculatorLayoutProps {
   aside?: ReactNode
   related?: ReactNode
   /**
-   * Desktop: the form takes the height the results set and scrolls inside,
-   * rather than stretching the row. For long forms (e.g. with optional fields
-   * expanded), so the results do not fill with empty space.
+   * Desktop: the form scrolls inside instead of stretching the row, keeping the
+   * height it had before. For long forms (e.g. with optional fields expanded),
+   * so the results do not fill with empty space and the box does not shrink.
    */
   scrollableForm?: boolean
+  /**
+   * False until the user has filled in the required fields: the results, the
+   * explanation and everything below make way for a prompt to enter the numbers.
+   */
+  ready?: boolean
   className?: string
 }
 
@@ -38,8 +45,9 @@ export function CalculatorLayout({
   related,
   className,
   scrollableForm = false,
+  ready = true,
 }: CalculatorLayoutProps) {
-  const detailBlock = detail && <Reveal className="space-y-8">{detail}</Reveal>
+  const detailBlock = ready && detail && <Reveal className="space-y-8">{detail}</Reveal>
 
   if (!assistant) {
     return (
@@ -50,12 +58,20 @@ export function CalculatorLayout({
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
           <div className="order-2 lg:order-1">
-            <Reveal delay={80} className="lg:sticky lg:top-24">{form}</Reveal>
+            <Reveal delay={80} className="lg:sticky lg:top-24">
+              {form}
+            </Reveal>
           </div>
 
           <Reveal delay={160} className="order-1 space-y-6 lg:order-2">
-            {results}
-            {aside}
+            {ready ? (
+              <>
+                {results}
+                {aside}
+              </>
+            ) : (
+              <EmptyResults />
+            )}
           </Reveal>
         </div>
 
@@ -84,47 +100,42 @@ export function CalculatorLayout({
       >
         <Reveal
           delay={80}
-          className={cn(
-            'order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-1 xl:row-span-1 [&>*]:h-full',
-            scrollableForm && 'lg:relative',
-          )}
+          className="order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-1 xl:row-span-1 [&>*]:h-full"
         >
-          {scrollableForm ? (
-            // Out of the flow on wide screens, so the row's height comes from the other
-            // columns; the card scrolls within it (min-h-full keeps it filling the column).
-            // The form's actions (Restart) stay pinned to the bottom while the fields scroll.
-            <div
-              className={cn(
-                'lg:absolute lg:inset-0 lg:overflow-y-auto lg:rounded-2xl [&>*]:min-h-full',
-                'lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(255,255,255,0.15)_transparent]',
-                'lg:[&_[data-form-actions]]:sticky lg:[&_[data-form-actions]]:bottom-0 lg:[&_[data-form-actions]]:z-10',
-                'lg:[&_[data-form-actions]]:-mx-6 lg:[&_[data-form-actions]]:-mb-6 lg:[&_[data-form-actions]]:px-6 lg:[&_[data-form-actions]]:pb-6',
-                'lg:[&_[data-form-actions]]:bg-card lg:[&_[data-form-actions]]:shadow-[0_-12px_20px_-12px_rgba(0,0,0,0.6)]',
-              )}
-            >
-              {form}
-            </div>
-          ) : (
-            form
-          )}
+          {/* Scrollable when asked (long forms), keeping the height it had before. */}
+          <FormColumn scrollable={scrollableForm}>{form}</FormColumn>
         </Reveal>
+
+        {!ready && (
+          // Until the numbers are in, one prompt takes the results and explanation columns.
+          <Reveal
+            delay={160}
+            className="order-1 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-span-2 xl:row-span-1 [&>*]:h-full"
+          >
+            <EmptyResults />
+          </Reveal>
+        )}
 
         {/* One results card grows to fill the column, so it ends level with the form: the
             one marked data-grow, or else the last. */}
-        <Reveal
-          delay={160}
-          className="order-1 flex flex-col gap-6 lg:order-none lg:col-start-2 lg:row-start-1 [&>*:last-child]:flex-1 has-[>[data-grow]]:[&>*:last-child]:flex-none [&>[data-grow]]:flex-1"
-        >
-          {results}
-          {aside}
-        </Reveal>
+        {ready && (
+          <Reveal
+            delay={160}
+            className="order-1 flex flex-col gap-6 lg:order-none lg:col-start-2 lg:row-start-1 [&>*:last-child]:flex-1 has-[>[data-grow]]:[&>*:last-child]:flex-none [&>[data-grow]]:flex-1"
+          >
+            {results}
+            {aside}
+          </Reveal>
+        )}
 
-        <Reveal
-          delay={240}
-          className="order-3 lg:order-none lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:[&>*]:h-full"
-        >
-          {assistant}
-        </Reveal>
+        {ready && (
+          <Reveal
+            delay={240}
+            className="order-3 lg:order-none lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:[&>*]:h-full"
+          >
+            {assistant}
+          </Reveal>
+        )}
 
         {detailBlock && (
           <div className="order-4 mt-4 lg:order-none lg:col-span-2 lg:col-start-1 lg:row-start-3 xl:col-span-3 xl:row-start-2">

@@ -57,6 +57,16 @@ export interface RateInputProps {
    * the input into the tooltip, so the field stays the height of its neighbour.
    */
   compact?: boolean
+  /** Passed to the underlying PercentageInput. */
+  allowEmpty?: boolean
+  /**
+   * The rate used when the field is left empty (effective annual, like `value`).
+   * The empty field shows it as a placeholder, with `fallbackNote` underneath.
+   */
+  fallback?: number
+  fallbackNote?: string
+  /** Shows a quiet "Optional" at the right of the label. */
+  optional?: boolean
 }
 
 /**
@@ -68,7 +78,19 @@ export interface RateInputProps {
  * (1 + E.A.) = (1 + M.V.)^12 — so toggling never changes a result.
  * Other markets get a plain rate field.
  */
-export function RateInput({ id, country, value, onChange, error, label, compact = false }: RateInputProps) {
+export function RateInput({
+  id,
+  country,
+  value,
+  onChange,
+  error,
+  label,
+  compact = false,
+  allowEmpty = true,
+  fallback,
+  fallbackNote,
+  optional = false,
+}: RateInputProps) {
   const { t } = useI18n()
   const [basis, setBasis] = useRateBasis()
 
@@ -82,6 +104,10 @@ export function RateInput({ id, country, value, onChange, error, label, compact 
         value={value}
         error={error}
         onChange={onChange}
+        allowEmpty={allowEmpty}
+        optional={optional}
+        placeholder={fallback !== undefined ? (fallback * 100).toFixed(2) : undefined}
+        note={!Number.isFinite(value) && fallback !== undefined ? fallbackNote : undefined}
       />
     )
   }
@@ -90,7 +116,14 @@ export function RateInput({ id, country, value, onChange, error, label, compact 
   const shown = monthly ? effectiveToPeriodic(value, 12) : value
   const other = monthly ? value : effectiveToPeriodic(value, 12)
   const otherLabel = monthly ? t.rateInput.effectiveAnnual : t.rateInput.monthly
-  const equivalent = t.rateInput.equivalent(formatPercent(other, country.locale, monthly ? 2 : 3), otherLabel)
+  const usingFallback = !Number.isFinite(value) && fallback !== undefined
+  const placeholder =
+    fallback !== undefined
+      ? ((monthly ? effectiveToPeriodic(fallback, 12) : fallback) * 100).toFixed(monthly ? 3 : 2)
+      : undefined
+  const equivalent = Number.isFinite(value)
+    ? t.rateInput.equivalent(formatPercent(other, country.locale, monthly ? 2 : 3), otherLabel)
+    : ''
   const basisHint = monthly ? t.rateInput.monthlyHint : t.rateInput.effectiveAnnualHint
 
   return (
@@ -106,10 +139,17 @@ export function RateInput({ id, country, value, onChange, error, label, compact 
       step={monthly ? 0.01 : 0.05}
       max={monthly ? 20 : 100}
       error={error}
-      note={compact ? undefined : equivalent}
+      allowEmpty={allowEmpty}
+      optional={optional}
+      placeholder={placeholder}
+      note={usingFallback ? fallbackNote : compact || !equivalent ? undefined : equivalent}
       onChange={(typed) => onChange(monthly ? periodicToEffective(typed, 12) : typed)}
       adornment={
-        <div role="radiogroup" aria-label={t.rateInput.basis} className={cn('flex rounded-full bg-muted p-0.5 font-medium', compact ? 'text-[10px]' : 'text-[11px]')}>
+        <div
+          role="radiogroup"
+          aria-label={t.rateInput.basis}
+          className={cn('flex rounded-full bg-muted p-0.5 font-medium', compact ? 'text-[10px]' : 'text-[11px]')}
+        >
           {(['ea', 'mv'] as const).map((option) => (
             <button
               key={option}

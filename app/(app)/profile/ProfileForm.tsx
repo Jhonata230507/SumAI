@@ -67,6 +67,7 @@ export function ProfileForm({ initial, country }: ProfileFormProps) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <CurrencyInput
+              allowEmpty={false}
               id="income"
               label={t.profile.income}
               currency={country.currency}
@@ -74,6 +75,7 @@ export function ProfileForm({ initial, country }: ProfileFormProps) {
               onChange={(v) => set('monthlyIncome', v || null)}
             />
             <CurrencyInput
+              allowEmpty={false}
               id="expenses"
               label={t.profile.expenses}
               currency={country.currency}
@@ -81,6 +83,7 @@ export function ProfileForm({ initial, country }: ProfileFormProps) {
               onChange={(v) => set('monthlyExpenses', v || null)}
             />
             <CurrencyInput
+              allowEmpty={false}
               id="debts"
               label={t.profile.debts}
               currency={country.currency}
@@ -88,6 +91,7 @@ export function ProfileForm({ initial, country }: ProfileFormProps) {
               onChange={(v) => set('existingDebtPayments', v || null)}
             />
             <CurrencyInput
+              allowEmpty={false}
               id="savings"
               label={t.profile.savings}
               currency={country.currency}

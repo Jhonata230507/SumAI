@@ -16,6 +16,7 @@ export const en = {
     saving: 'Saving…',
     signIn: 'Sign in',
     reset: 'Reset',
+    optional: 'Optional',
     restart: 'Restart',
     loading: 'Loading',
     open: 'Open',
@@ -407,6 +408,8 @@ export const en = {
   calculatorForm: {
     title: 'Your numbers',
     saveScenario: 'Save scenario',
+    emptyTitle: 'Enter your numbers',
+    emptyBody: 'Fill in the fields to see your payment, what it all costs, and the best options for you.',
   },
 
   whatIf: {
@@ -477,6 +480,24 @@ export const en = {
   },
 
   loan: {
+    rateOptional: 'Interest rate (optional)',
+    income: 'Gross annual income',
+    purpose: 'Loan purpose',
+    purposeNone: 'Not specified',
+    purposes: {
+      'debt-consolidation': 'Debt consolidation',
+      'home-improvement': 'Home improvement',
+      'major-purchase': 'Major purchase',
+      medical: 'Medical expenses',
+      'car-repair': 'Car repair',
+      other: 'Other',
+    },
+    estimatedRateNote: (rate: string, band: string | null) =>
+      band
+        ? `Leave it empty and we use about ${rate}, typical for a ${band} score`
+        : `Leave it empty and we use ${rate}, the average rate for this kind of loan. Add your credit score for a closer estimate`,
+    dtiLoan: "This loan's payment",
+    averageRateNote: (rate: string) => `Leave it empty and we use the average rate for this kind of loan: ${rate}`,
     amount: 'Loan amount',
     frequency: 'Payment frequency',
     frequencies: { monthly: 'Monthly', biweekly: 'Every two weeks', weekly: 'Weekly' },
@@ -644,6 +665,7 @@ export const en = {
     target: 'Reach a target',
     targetAmount: 'Target amount',
     startingBalance: 'Starting balance',
+    startingBalanceHint: 'Leave it empty if you are starting from zero.',
     monthlyDeposit: 'Monthly deposit',
     interestRate: 'Interest rate',
     timeFrame: 'Time frame',
@@ -666,8 +688,8 @@ export const en = {
     debtNameLabel: (i: number) => `Name of debt ${i}`,
     remove: (name: string) => `Remove ${name}`,
     balance: 'Balance',
-    rate: 'Rate',
-    minimum: 'Minimum',
+    rate: 'Interest rate',
+    minimum: 'Minimum monthly payment',
     addDebt: 'Add a debt',
     newDebtName: (n: number) => `Debt ${n}`,
     defaultNames: { 'card-1': 'Credit card', 'card-2': 'Store card', student: 'Student loan' } as Record<
@@ -679,6 +701,9 @@ export const en = {
       `Minimums add up to ${minimums}. Anything above that speeds things up.`,
     avalanche: 'Highest rate first',
     snowball: 'Smallest balance first',
+    strategyLabel: 'Which debt do you pay first?',
+    avalancheHint: 'Pay the least interest overall',
+    snowballHint: 'Clear whole debts sooner',
     debtFreeIn: 'Debt free in',
     totalInterest: 'Total interest',
     totalPaid: 'Total paid',
@@ -821,12 +846,44 @@ export const en = {
     overTerm: (amount: string) => `+${amount} over the term`,
     reasons: {
       lowestRate: 'Lowest rate in these results',
+      highestRate: 'Highest rate in these results',
       noFee: 'No origination fee',
       meetsRequirements: 'You meet the stated requirements',
       needsScore: (score: number) => `Needs a credit score of ${score}`,
       incomeBelow: 'Income below the stated minimum',
       debtAbove: 'Existing debt is above the stated limit',
+      amountAbove: (max: string) => `Lends up to ${max}`,
+      amountBelow: (min: string) => `Lends from ${min}`,
+      termOutside: (range: string) => `Terms of ${range}`,
     },
+  },
+
+  // "Best options for you": ranked lenders under every calculator.
+  offers: {
+    title: {
+      mortgage: 'The best mortgages for you',
+      'car-loan': 'The best car loans for you',
+      'personal-loan': 'The best loans for you',
+      savings: 'The best savings accounts for you',
+    },
+    subtitle: (amount: string, term: string) => `Ranked for ${amount} over ${term}, by rate, fees and whether you qualify.`,
+    savingsSubtitle: (amount: string) => `Ranked by rate for a balance of ${amount}.`,
+    sample: 'Sample lenders',
+    sampleNote: 'These lenders are examples, not real institutions, until live rates are connected.',
+    rate: 'Rate',
+    from: 'from',
+    monthly: 'Est. monthly payment',
+    totalCost: 'Total cost',
+    yearly: 'Earns in a year',
+    best: 'Best rate',
+    likely: 'You likely qualify',
+    open: 'No requirements to check',
+    viewOffer: 'View offer',
+    viewAll: 'See all options',
+    loading: 'Finding the best options…',
+    empty: 'No lender in our list covers this amount and term. Try changing them.',
+    unavailable: "We couldn't load the options right now.",
+    disclaimer: 'Estimates from each lender\'s lowest advertised rate; your actual offer depends on your profile.',
   },
 
   fields: {

@@ -85,6 +85,7 @@ export function GoalForm({ initial, currency, submitLabel, onSubmit }: GoalFormP
 
       <div className="grid gap-4 sm:grid-cols-2">
         <CurrencyInput
+          allowEmpty={false}
           id="goal-target"
           label={t.goals.target}
           currency={currency}
@@ -92,6 +93,7 @@ export function GoalForm({ initial, currency, submitLabel, onSubmit }: GoalFormP
           onChange={(v) => set('targetAmount', v)}
         />
         <CurrencyInput
+          allowEmpty={false}
           id="goal-current"
           label={t.goals.savedSoFar}
           currency={currency}
@@ -99,6 +101,7 @@ export function GoalForm({ initial, currency, submitLabel, onSubmit }: GoalFormP
           onChange={(v) => set('currentAmount', v)}
         />
         <CurrencyInput
+          allowEmpty={false}
           id="goal-monthly"
           label={t.goals.monthly}
           currency={currency}
@@ -106,6 +109,7 @@ export function GoalForm({ initial, currency, submitLabel, onSubmit }: GoalFormP
           onChange={(v) => set('monthlyContribution', v)}
         />
         <PercentageInput
+          allowEmpty={false}
           id="goal-return"
           label={t.goals.expectedReturn}
           hint={t.goals.expectedReturnHint}

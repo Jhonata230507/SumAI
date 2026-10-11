@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { CREDIT_BANDS } from '@/features/calculators/mortgage/us'
+import { LOAN_PURPOSES } from './us'
 import {
   countryCode,
   nonNegativeAmount,
@@ -16,6 +18,11 @@ export const loanSchema = z.object({
   extraPayment: nonNegativeAmount.default(0),
   originationFee: nonNegativeAmount.default(0),
   countryCode: countryCode.default('us'),
+  // US only, all optional: they sharpen the rate estimate, eligibility and the explanation.
+  annualIncome: nonNegativeAmount.optional(),
+  monthlyDebts: nonNegativeAmount.optional(),
+  creditBand: z.enum(CREDIT_BANDS).nullable().optional(),
+  purpose: z.enum(LOAN_PURPOSES).nullable().optional(),
 })
 
 export type LoanSchema = z.infer<typeof loanSchema>

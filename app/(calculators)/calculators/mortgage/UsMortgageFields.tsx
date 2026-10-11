@@ -7,6 +7,7 @@ import { PercentageInput } from '@/components/common/PercentageInput'
 import { TermInput } from '@/components/common/TermInput'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { OptionalTag } from '@/components/common/OptionalTag'
 import { Select } from '@/components/ui/select'
 import { CREDIT_BANDS, LOAN_TYPES, estimatePropertyTax, isZip, type LoanType } from '@/features/calculators/mortgage/us'
 import type { MortgageSchema } from '@/features/calculators/mortgage/schema'
@@ -66,7 +67,6 @@ export function UsMortgageFields({
   const tax = estimatePropertyTax(input.homePrice, zip)
   const downRatio = input.downPayment / Math.max(input.homePrice, 1)
   const belowMinimum = minDownRatio !== null && downRatio < minDownRatio - 1e-9
-  const optional = (label: string) => `${label} (${u.optional})`
   const pct = (value: number, decimals = 1) => formatPercent(value, country.locale, decimals)
 
   const zipNote = !zip
@@ -110,7 +110,7 @@ export function UsMortgageFields({
         currency={country.currency}
         value={input.downPayment}
         error={errors.downPayment ?? (belowMinimum ? u.minDown(pct(minDownRatio!), u.loanTypes[loanType]) : undefined)}
-        hint={t.mortgage.ofPrice(pct(downRatio))}
+        hint={Number.isFinite(input.downPayment / input.homePrice) ? t.mortgage.ofPrice(pct(downRatio)) : undefined}
         onChange={(v) => onChange('downPayment', v)}
       />
 
@@ -181,7 +181,10 @@ export function UsMortgageFields({
 
       <div id={panelId} hidden={!open} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="credit">{optional(u.creditScore)}</Label>
+          <div className="flex items-end justify-between gap-2">
+            <Label htmlFor="credit">{u.creditScore}</Label>
+            <OptionalTag />
+          </div>
           <Select
             id="credit"
             value={input.creditBand ?? ''}
@@ -206,7 +209,8 @@ export function UsMortgageFields({
 
         <CurrencyInput
           id="tax"
-          label={optional(t.mortgage.propertyTax)}
+          label={t.mortgage.propertyTax}
+          optional
           currency={country.currency}
           value={input.propertyTaxAnnual}
           hint={touched.tax ? undefined : u.taxEstimated(pct(tax.rate, 2), tax.stateName)}
@@ -215,7 +219,8 @@ export function UsMortgageFields({
 
         <CurrencyInput
           id="insurance"
-          label={optional(t.mortgage.insurance)}
+          label={t.mortgage.insurance}
+          optional
           currency={country.currency}
           value={input.homeInsuranceAnnual}
           hint={touched.insurance ? undefined : u.insuranceEstimated}
@@ -224,7 +229,8 @@ export function UsMortgageFields({
 
         <CurrencyInput
           id="hoa"
-          label={optional(t.mortgage.hoa)}
+          label={t.mortgage.hoa}
+          optional
           currency={country.currency}
           value={input.hoaMonthly}
           onChange={(v) => onChange('hoaMonthly', v)}
@@ -232,7 +238,8 @@ export function UsMortgageFields({
 
         <CurrencyInput
           id="extra"
-          label={optional(t.mortgage.extra)}
+          label={t.mortgage.extra}
+          optional
           currency={country.currency}
           value={input.extraPayment}
           onChange={(v) => onChange('extraPayment', v)}

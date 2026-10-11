@@ -21,14 +21,10 @@ export async function findProducts(query: ProductQuery): Promise<FinancialProduc
   }
 
   if (query.termMonths !== undefined) {
-    builder = builder
-      .lte('term_months_min', query.termMonths)
-      .gte('term_months_max', query.termMonths)
+    builder = builder.lte('term_months_min', query.termMonths).gte('term_months_max', query.termMonths)
   }
 
-  const { data, error } = await builder
-    .order('rate_min', { ascending: true })
-    .limit(query.limit ?? 50)
+  const { data, error } = await builder.order('rate_min', { ascending: true }).limit(query.limit ?? 50)
 
   if (error) throw new Error(`Failed to load products: ${error.message}`)
 
@@ -37,11 +33,7 @@ export async function findProducts(query: ProductQuery): Promise<FinancialProduc
 
 export async function findProductById(id: string): Promise<FinancialProduct | null> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('products')
-    .select('*, provider:providers(*)')
-    .eq('id', id)
-    .maybeSingle()
+  const { data, error } = await supabase.from('products').select('*, provider:providers(*)').eq('id', id).maybeSingle()
 
   if (error || !data) return null
   return toFinancialProduct(data)

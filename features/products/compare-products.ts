@@ -33,11 +33,7 @@ export function compareProducts(
   const country = getCountry(countryCode)
 
   const rows = products.map((product) => {
-    const periodicRate = toPeriodicRate(
-      product.rateMin,
-      12,
-      country.rules.quotesEffectiveAnnualRate,
-    )
+    const periodicRate = toPeriodicRate(product.rateMin, 12, country.rules.quotesEffectiveAnnualRate)
 
     const monthlyPayment = periodicPayment(amount, periodicRate, termMonths)
     const interest = totalInterest(amount, periodicRate, termMonths)

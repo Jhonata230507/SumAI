@@ -55,3 +55,32 @@ export function parseCurrency(input: string, currency: CurrencyCode = 'USD'): nu
   const parsed = Number.parseFloat(cleaned)
   return Number.isFinite(parsed) ? parsed : 0
 }
+
+/**
+ * Formats a money amount while it is being typed: thousands grouped with the
+ * currency's separator (1.000.000 for COP, 1,000,000 for USD), so nobody has to
+ * count zeros. Anything that is not a digit or the decimal separator is dropped,
+ * and the user's own grouping is redone. Decimals are kept only for currencies
+ * that have them, up to their precision.
+ */
+export function formatAmountInput(raw: string, currency: CurrencyCode = 'USD'): string {
+  const { group, decimal } = amountSeparators(currency)
+  const decimals = CURRENCIES[currency].decimals
+
+  const [typedWhole, ...rest] = raw.split(decimal)
+  let whole = typedWhole.replace(/\D/g, '')
+  const fraction = rest.join('').replace(/\D/g, '').slice(0, decimals)
+  const hasPoint = decimals > 0 && rest.length > 0
+
+  // No leading zeros, but keep a single "0" before a decimal point.
+  whole = whole.replace(/^0+(?=\d)/, '')
+  if (!whole && hasPoint) whole = '0'
+
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, group)
+  return hasPoint ? `${grouped}${decimal}${fraction}` : grouped
+}
+
+/** The grouping and decimal characters the currency's locale uses. */
+export function amountSeparators(currency: CurrencyCode = 'USD'): { group: string; decimal: string } {
+  return CURRENCIES[currency].locale.startsWith('es') ? { group: '.', decimal: ',' } : { group: ',', decimal: '.' }
+}

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { OptionalTag } from './OptionalTag'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Info } from 'lucide-react'
 
@@ -26,6 +27,12 @@ export interface PercentageInputProps {
   note?: string
   /** Decimals shown when the field is not being edited. */
   decimals?: number
+  /** Clearing reports NaN (empty) instead of keeping the old value; see CurrencyInput. */
+  allowEmpty?: boolean
+  /** Shown in the empty field, e.g. the value used when it is left empty. */
+  placeholder?: string
+  /** Shows a quiet "Optional" at the right of the label. */
+  optional?: boolean
 }
 
 /**
@@ -48,9 +55,12 @@ export function PercentageInput({
   adornment,
   note,
   decimals = 2,
+  allowEmpty = true,
+  placeholder,
+  optional = false,
 }: PercentageInputProps) {
   const [draft, setDraft] = React.useState<string | null>(null)
-  const display = draft ?? (value * 100).toFixed(decimals)
+  const display = draft ?? (Number.isFinite(value) ? (value * 100).toFixed(decimals) : '')
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
@@ -61,7 +71,12 @@ export function PercentageInput({
             <Info className="h-3.5 w-3.5 text-muted-foreground" />
           </Tooltip>
         )}
-        {adornment && <div className="ml-auto">{adornment}</div>}
+        {(optional || adornment) && (
+          <div className="ml-auto flex items-center gap-2">
+            {optional && <OptionalTag />}
+            {adornment}
+          </div>
+        )}
       </div>
 
       <div className="relative">
@@ -74,10 +89,15 @@ export function PercentageInput({
           max={max}
           value={display}
           disabled={disabled}
+          placeholder={placeholder}
           aria-invalid={Boolean(error)}
           className={cn('pr-8 tabular-nums', error && 'border-destructive')}
           onChange={(event) => {
             setDraft(event.target.value)
+            if (allowEmpty && event.target.value.trim() === '') {
+              onChange(Number.NaN)
+              return
+            }
             const percent = Number.parseFloat(event.target.value)
             if (Number.isFinite(percent)) {
               onChange(Math.min(Math.max(percent, min), max) / 100)

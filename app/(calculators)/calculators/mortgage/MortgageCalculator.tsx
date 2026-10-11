@@ -16,7 +16,12 @@ import { TermInput } from '@/components/common/TermInput'
 import { DebtToIncome } from '@/components/calculator/DebtToIncome'
 import { PaymentBreakdown } from '@/components/charts/PaymentBreakdown'
 import { Card, CardContent } from '@/components/ui/card'
-import { estimateHomeInsurance, estimatePropertyTax, estimateRate } from '@/features/calculators/mortgage/us'
+import {
+  bandToScore,
+  estimateHomeInsurance,
+  estimatePropertyTax,
+  estimateRate,
+} from '@/features/calculators/mortgage/us'
 import { UsMortgageFields, type Touched } from './UsMortgageFields'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { calculateMortgage } from '@/features/calculators/mortgage/calculation'
@@ -27,6 +32,7 @@ import { useWhatIf } from '@/features/calculators/use-what-if'
 import { formatPercent } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
 import type { CountryConfig } from '@/types/country'
+import { BestOffers } from '@/components/calculator/BestOffers'
 
 export interface MortgageCalculatorProps {
   country: CountryConfig
@@ -35,12 +41,29 @@ export interface MortgageCalculatorProps {
   related: ReactNode
 }
 
+/** Fields the calculator opens with empty (NaN): the user types their own numbers. */
+/** Empty fields the user fills in. US: the purchase and household numbers; the rate stays an estimate. */
+const START_US = {
+  homePrice: Number.NaN,
+  downPayment: Number.NaN,
+  annualIncome: Number.NaN,
+  monthlyDebts: Number.NaN,
+  termMonths: Number.NaN,
+  propertyTaxAnnual: 0,
+  homeInsuranceAnnual: 0,
+}
+const START = { homePrice: Number.NaN, downPayment: Number.NaN, annualRate: Number.NaN, termMonths: Number.NaN }
+
+/** Colombia: the rate may be left empty; the average mortgage rate is used then. */
+const CO_FALLBACK = { annualRate: getBenchmarks('co').mortgage30Year }
+
 export function MortgageCalculator({ country, initial, header, related }: MortgageCalculatorProps) {
   const { t } = useI18n()
-  const { input, committed, errors, result, set, update, reset, formError } = useCalculator(
+  const { input, committed, errors, result, set, ready, update, reset, formError } = useCalculator(
     mortgageSchema,
     calculateMortgage,
     initial,
+    { start: country.code === 'us' ? START_US : START, fallback: country.code === 'co' ? CO_FALLBACK : undefined },
   )
 
   // "What if" options: one at a time, compared against the numbers they replace.
@@ -185,6 +208,7 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
 
   return (
     <CalculatorLayout
+      ready={ready}
       // US: with the optional fields open the form is long; it scrolls instead of stretching the results.
       scrollableForm={isUs && estimatesOpen}
       header={header}
@@ -221,9 +245,14 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
                 currency={country.currency}
                 value={input.downPayment}
                 error={errors.downPayment}
-                hint={t.mortgage.ofPrice(
-                  formatPercent(input.downPayment / Math.max(input.homePrice, 1), country.locale, 1),
-                )}
+                hint={
+                  // Only once both numbers are in.
+                  Number.isFinite(input.downPayment / input.homePrice)
+                    ? t.mortgage.ofPrice(
+                        formatPercent(input.downPayment / Math.max(input.homePrice, 1), country.locale, 1),
+                      )
+                    : undefined
+                }
                 onChange={(v) => set('downPayment', v)}
               />
 
@@ -233,6 +262,13 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
                 value={input.annualRate}
                 error={errors.annualRate}
                 onChange={(v) => set('annualRate', v)}
+                {...(country.code === 'co' && {
+                  optional: true,
+                  fallback: CO_FALLBACK.annualRate,
+                  fallbackNote: t.loan.averageRateNote(
+                    `${formatPercent(CO_FALLBACK.annualRate, country.locale)} ${t.rateInput.effectiveAnnual}`,
+                  ),
+                })}
               />
 
               <TermInput
@@ -248,6 +284,7 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
 
               <CurrencyInput
                 id="extra"
+                optional
                 label={t.mortgage.extra}
                 currency={country.currency}
                 value={input.extraPayment}
@@ -314,7 +351,6 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
               </CardContent>
             </Card>
           )}
-
         </>
       }
       assistant={
@@ -337,6 +373,16 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
       }
       detail={
         <>
+          {/* The best options for the user, right under the results. */}
+          <BestOffers
+            category="mortgage"
+            country={country}
+            amount={result.loanAmount}
+            termMonths={committed.termMonths}
+            creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
+            monthlyIncome={committed.annualIncome ? committed.annualIncome / 12 : undefined}
+            monthlyDebts={committed.annualIncome ? (committed.monthlyDebts ?? 0) : undefined}
+          />
           {/* Below the top row, full width, so the columns stay level without empty space. */}
           {whatIf}
           <AmortizationChart rows={chartRows} currency={result.currency} />

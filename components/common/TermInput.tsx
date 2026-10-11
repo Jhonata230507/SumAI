@@ -20,6 +20,8 @@ export interface TermInputProps {
   /** The unit the field opens in. */
   defaultUnit?: Unit
   className?: string
+  /** Clearing reports NaN (empty); see CurrencyInput. */
+  allowEmpty?: boolean
 }
 
 /**
@@ -38,6 +40,7 @@ export function TermInput({
   max = 600,
   defaultUnit = 'years',
   className,
+  allowEmpty = true,
 }: TermInputProps) {
   const { t, locale } = useI18n()
   const [unit, setUnit] = React.useState<Unit>(defaultUnit)
@@ -45,11 +48,12 @@ export function TermInput({
 
   const perUnit = unit === 'years' ? 12 : 1
   // Up to two decimals in years (1.5, 2.25), whole numbers in months.
-  const display = draft ?? String(Math.round((months / perUnit) * 100) / 100)
+  const display = draft ?? (Number.isFinite(months) ? String(Math.round((months / perUnit) * 100) / 100) : '')
   // The term in the other unit, e.g. "= 90 meses" or "= 1,5 años" (locale decimals).
   const years = months / 12
-  const note =
-    unit === 'years'
+  const note = !Number.isFinite(months)
+    ? null
+    : unit === 'years'
       ? months % 12 === 0
         ? null
         : t.common.months(months)
@@ -99,6 +103,10 @@ export function TermInput({
           className="pr-16 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           onChange={(event) => {
             setDraft(event.target.value)
+            if (allowEmpty && event.target.value.trim() === '') {
+              onChange(Number.NaN)
+              return
+            }
             const typed = Number.parseFloat(event.target.value)
             if (Number.isFinite(typed) && typed > 0) {
               onChange(Math.min(Math.max(Math.round(typed * perUnit), min), max))

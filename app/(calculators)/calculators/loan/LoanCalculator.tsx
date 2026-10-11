@@ -1,6 +1,8 @@
 'use client'
 
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, type ReactNode, useState } from 'react'
+import { formatPercent } from '@/lib/utils/format-number'
+import { getBenchmarks } from '@/lib/countries'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
@@ -20,6 +22,11 @@ import { useWhatIf } from '@/features/calculators/use-what-if'
 import { useI18n } from '@/lib/i18n/client'
 import { FREQUENCY_PER_YEAR, type Frequency } from '@/types/common'
 import type { CountryConfig } from '@/types/country'
+import { BestOffers } from '@/components/calculator/BestOffers'
+import { UsLoanFields } from './UsLoanFields'
+import { DebtToIncome } from '@/components/calculator/DebtToIncome'
+import { estimatePersonalLoanRate } from '@/features/calculators/loan/us'
+import { bandToScore } from '@/features/calculators/mortgage/us'
 
 export interface LoanCalculatorProps {
   country: CountryConfig
@@ -30,9 +37,35 @@ export interface LoanCalculatorProps {
 
 const FREQUENCIES: Frequency[] = ['monthly', 'biweekly', 'weekly']
 
+/** Fields the calculator opens with empty (NaN): the user types their own numbers. */
+const START = { amount: Number.NaN, annualRate: Number.NaN, termMonths: Number.NaN }
+
+/** The rate may be left empty: the market's average consumer-loan rate is used then. */
+const RATE_FALLBACK = {
+  co: { annualRate: getBenchmarks('co').personalLoan },
+  us: { annualRate: getBenchmarks('us').personalLoan },
+  ca: { annualRate: getBenchmarks('ca').personalLoan },
+}
+
+/** US: with the rate empty, the estimate follows the credit score when given. */
+const US_FALLBACK = (input: LoanSchema) => ({
+  annualRate: estimatePersonalLoanRate(getBenchmarks('us'), input.creditBand),
+})
+
 export function LoanCalculator({ country, initial, header, related }: LoanCalculatorProps) {
   const { t } = useI18n()
-  const { input, committed, errors, result, set, update, reset } = useCalculator(loanSchema, calculateLoan, initial)
+  const isCo = country.code === 'co'
+  const isUs = country.code === 'us'
+  const [estimatesOpen, setEstimatesOpen] = useState(false)
+  // Used when the rate is left empty, quoted the way this market quotes rates.
+  const averageRate = RATE_FALLBACK[country.code].annualRate
+  const rateBasis = country.rules.quotesEffectiveAnnualRate ? t.rateInput.effectiveAnnual : t.products.rateBasis.nominal
+  const { input, committed, errors, result, set, ready, update, reset } = useCalculator(
+    loanSchema,
+    calculateLoan,
+    initial,
+    { start: START, fallback: isUs ? US_FALLBACK : RATE_FALLBACK[country.code] },
+  )
 
   // "What if" options: one at a time, compared against the numbers they replace.
   const whatIfState = useWhatIf(committed, buildLoanScenarios, update)
@@ -50,6 +83,20 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
       periodsDelta: delta.periodsDelta,
     }
   })
+
+  // US: the rate used while the field is empty, and how lenders would see the loan.
+  const estimatedRate = isUs ? estimatePersonalLoanRate(getBenchmarks('us'), input.creditBand) : averageRate
+  const monthlyIncome = committed.annualIncome ? committed.annualIncome / 12 : undefined
+  const debtToIncome =
+    isUs && monthlyIncome
+      ? {
+          front: result.payment / monthlyIncome,
+          back: (result.payment + (committed.monthlyDebts ?? 0)) / monthlyIncome,
+          frontLimit: null,
+          // A common ceiling lenders apply to all monthly debts.
+          backLimit: 0.36,
+        }
+      : null
 
   const figures: SummaryFigure[] = [
     {
@@ -88,76 +135,99 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
 
   return (
     <CalculatorLayout
+      ready={ready}
+      // US: with the optional fields open the form is long; it scrolls instead of stretching the results.
+      scrollableForm={isUs && estimatesOpen}
       header={header}
       related={related}
       form={
         <CalculatorForm onReset={reset}>
-          <CurrencyInput
-            id="amount"
-            label={t.loan.amount}
-            currency={country.currency}
-            value={input.amount}
-            error={errors.amount}
-            onChange={(v) => set('amount', v)}
-          />
-
-          <RateInput
-            id="rate"
-            country={country}
-            value={input.annualRate}
-            error={errors.annualRate}
-            onChange={(v) => set('annualRate', v)}
-          />
-
-          <TermInput
-            id="term"
-            label={country.terminology.loanTerm}
-            months={input.termMonths}
-            onChange={(months) => set('termMonths', months)}
-          />
-
-          <div className="space-y-1.5">
-            <Label htmlFor="frequency">{t.loan.frequency}</Label>
-            <Select
-              id="frequency"
-              value={input.frequency}
-              options={FREQUENCIES.map((value) => ({
-                value,
-                label: t.loan.frequencies[value as keyof typeof t.loan.frequencies],
-              }))}
-              onChange={(e) => set('frequency', e.target.value as Frequency)}
+          {isUs ? (
+            <UsLoanFields
+              country={country}
+              input={input}
+              errors={errors}
+              estimatedRate={estimatedRate}
+              open={estimatesOpen}
+              onToggle={setEstimatesOpen}
+              onChange={set}
             />
-          </div>
+          ) : (
+            <>
+              <CurrencyInput
+                id="amount"
+                label={t.loan.amount}
+                currency={country.currency}
+                value={input.amount}
+                error={errors.amount}
+                onChange={(v) => set('amount', v)}
+              />
 
-          <CurrencyInput
-            id="extra"
-            label={t.loan.extra}
-            hint={t.loan.extraHint}
-            currency={country.currency}
-            value={input.extraPayment}
-            onChange={(v) => set('extraPayment', v)}
-          />
+              <RateInput
+                id="rate"
+                country={country}
+                value={input.annualRate}
+                error={errors.annualRate}
+                onChange={(v) => set('annualRate', v)}
+                optional
+                fallback={averageRate}
+                fallbackNote={t.loan.averageRateNote(`${formatPercent(averageRate, country.locale)} ${rateBasis}`)}
+              />
 
-          <CurrencyInput
-            id="fee"
-            label={t.loan.fee}
-            currency={country.currency}
-            value={input.originationFee}
-            onChange={(v) => set('originationFee', v)}
-          />
+              <TermInput
+                id="term"
+                label={country.terminology.loanTerm}
+                months={input.termMonths}
+                onChange={(months) => set('termMonths', months)}
+              />
+
+              <div className="space-y-1.5">
+                <Label htmlFor="frequency">{t.loan.frequency}</Label>
+                <Select
+                  id="frequency"
+                  value={input.frequency}
+                  options={FREQUENCIES.map((value) => ({
+                    value,
+                    label: t.loan.frequencies[value as keyof typeof t.loan.frequencies],
+                  }))}
+                  onChange={(e) => set('frequency', e.target.value as Frequency)}
+                />
+              </div>
+
+              <CurrencyInput
+                id="extra"
+                optional
+                label={t.loan.extra}
+                hint={t.loan.extraHint}
+                currency={country.currency}
+                value={input.extraPayment}
+                onChange={(v) => set('extraPayment', v)}
+              />
+
+              <CurrencyInput
+                id="fee"
+                optional
+                label={t.loan.fee}
+                currency={country.currency}
+                value={input.originationFee}
+                onChange={(v) => set('originationFee', v)}
+              />
+            </>
+          )}
         </CalculatorForm>
       }
       results={
         <>
-          {country.code === 'co' ? (
+          {isCo || isUs ? (
             <>
-              {/* Colombia: the payment on its own, the rest of the figures in one card. */}
+              {/* The payment on its own, the rest of the figures in one card. */}
               <ResultSummary figures={figures.slice(0, 1)} currency={result.currency} locale={country.locale} />
               <ResultSummary combined figures={figures.slice(1)} currency={result.currency} locale={country.locale} />
             </>
           ) : (
             <ResultSummary figures={figures} currency={result.currency} locale={country.locale} />
           )}
+          {debtToIncome && <DebtToIncome value={debtToIncome} locale={country.locale} frontLabel={t.loan.dtiLoan} />}
           <WhatIfPanel
             options={whatIfs}
             currency={result.currency}
@@ -172,7 +242,11 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
             calculatorId: 'loan',
             countryCode: country.code,
             currency: result.currency,
-            inputs: { ...committed },
+            inputs: {
+              ...committed,
+              creditBand: committed.creditBand ?? 'not given',
+              purpose: committed.purpose ?? 'not given',
+            },
             results: {
               payment: result.payment,
               totalInterest: result.totalInterest,
@@ -186,6 +260,16 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
       }
       detail={
         <>
+          {/* The best options for the user, right under the results. */}
+          <BestOffers
+            category="personal-loan"
+            country={country}
+            amount={committed.amount}
+            termMonths={committed.termMonths}
+            creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
+            monthlyIncome={monthlyIncome}
+            monthlyDebts={monthlyIncome ? (committed.monthlyDebts ?? 0) : undefined}
+          />
           <AmortizationChart
             rows={result.schedule.rows}
             currency={result.currency}

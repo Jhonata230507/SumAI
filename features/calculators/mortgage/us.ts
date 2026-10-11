@@ -189,3 +189,8 @@ export function estimatePropertyTax(homePrice: number, zip: string) {
 export function estimateHomeInsurance(homePrice: number): number {
   return Math.round((homePrice * 0.005) / 10) * 10
 }
+
+/** A representative score for a band, for matching lenders' minimum-score rules. */
+export function bandToScore(band: CreditBand): number {
+  return { '760+': 780, '700-759': 730, '660-699': 680, '620-659': 640, '580-619': 600, '<580': 560 }[band]
+}

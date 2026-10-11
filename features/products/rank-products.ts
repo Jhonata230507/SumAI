@@ -3,6 +3,8 @@ import { periodicPayment } from '@/lib/calculations/payment'
 import { roundTo } from '@/lib/calculations/rounding'
 import { getCountry } from '@/lib/countries'
 import { getDictionary } from '@/lib/i18n'
+import { formatCurrency } from '@/lib/utils/format-currency'
+import { formatMonths } from '@/lib/utils/format-number'
 import type { FinancialProduct, ProductMatch } from '@/types/financial-product'
 import type { MatchWeights, ProductQuery, RankedProductList } from './types'
 
@@ -27,20 +29,32 @@ export function rankProducts(
   weights: MatchWeights = DEFAULT_WEIGHTS,
 ): RankedProductList {
   const text = getDictionary(query.language ?? 'en').products.reasons
+  // A loan is better with a lower rate; a savings account with a higher one.
+  const higherIsBetter = query.category === 'savings'
   const rates = products.map((p) => p.rateMin)
-  const bestRate = rates.length ? Math.min(...rates) : null
-  const worstRate = rates.length ? Math.max(...rates) : null
+  const low = rates.length ? Math.min(...rates) : null
+  const high = rates.length ? Math.max(...rates) : null
+  const bestRate = higherIsBetter ? high : low
+  const worstRate = higherIsBetter ? low : high
 
-  const matches: ProductMatch[] = products.map((product) => {
+  // With an amount and a term, the honest comparison is what each loan costs in
+  // full — interest plus fees — so that replaces the separate rate and fee scores.
+  const costs = higherIsBetter ? [] : products.map((p) => totalCost(p, query))
+  const knownCosts = costs.filter((c): c is number => c !== null)
+  const useCost = knownCosts.length === products.length && knownCosts.length > 0
+  const cheapest = useCost ? Math.min(...knownCosts) : 0
+  const dearest = useCost ? Math.max(...knownCosts) : 0
+
+  const matches: ProductMatch[] = products.map((product, index) => {
     const eligibility = scoreEligibility(product, query, text)
     const reasons: string[] = []
 
     const rateScore =
       bestRate === null || worstRate === null || worstRate === bestRate
         ? 1
-        : 1 - (product.rateMin - bestRate) / (worstRate - bestRate)
+        : 1 - Math.abs(product.rateMin - bestRate) / Math.abs(worstRate - bestRate)
 
-    if (product.rateMin === bestRate) reasons.push(text.lowestRate)
+    if (product.rateMin === bestRate) reasons.push(higherIsBetter ? text.highestRate : text.lowestRate)
 
     const feeScore = product.originationFee === 0 ? 1 : Math.max(0, 1 - product.originationFee / 1000)
     if (product.originationFee === 0) reasons.push(text.noFee)
@@ -55,10 +69,14 @@ export function rankProducts(
       reasons.push(...eligibility.blockers)
     }
 
+    const costScore = useCost && dearest > cheapest ? 1 - (costs[index]! - cheapest) / (dearest - cheapest) : 1
+    const priceScore = useCost
+      ? costScore * (weights.rate + weights.fees)
+      : rateScore * weights.rate + feeScore * weights.fees
+
     const raw =
-      rateScore * weights.rate +
+      priceScore +
       eligibility.score * weights.eligibility +
-      feeScore * weights.fees +
       termScore * weights.termFit +
       ratingScore * weights.providerRating
 
@@ -92,6 +110,22 @@ function scoreEligibility(product: FinancialProduct, query: ProductQuery, text: 
 
   const { minCreditScore, minIncome, maxDebtToIncome } = product.eligibility
 
+  // A product that does not lend this amount or term stays listed, with the reason.
+  const money = (v: number) => formatCurrency(v, product.currency, { compact: true })
+  if (query.amount !== undefined) {
+    if (query.amount > product.amountMax) blockers.push(text.amountAbove(money(product.amountMax)))
+    else if (query.amount < product.amountMin) blockers.push(text.amountBelow(money(product.amountMin)))
+  }
+  if (
+    query.termMonths !== undefined &&
+    (query.termMonths < product.termMonthsMin || query.termMonths > product.termMonthsMax)
+  ) {
+    const locale = getCountry(query.countryCode).locale
+    blockers.push(
+      text.termOutside(`${formatMonths(product.termMonthsMin, locale)}–${formatMonths(product.termMonthsMax, locale)}`),
+    )
+  }
+
   if (minCreditScore !== null && query.creditScore !== undefined) {
     checked += 1
     if (query.creditScore >= minCreditScore) met += 1
@@ -104,11 +138,7 @@ function scoreEligibility(product: FinancialProduct, query: ProductQuery, text: 
     else blockers.push(text.incomeBelow)
   }
 
-  if (
-    maxDebtToIncome !== null &&
-    query.monthlyIncome !== undefined &&
-    query.monthlyDebts !== undefined
-  ) {
+  if (maxDebtToIncome !== null && query.monthlyIncome !== undefined && query.monthlyDebts !== undefined) {
     checked += 1
     const dti = query.monthlyDebts / query.monthlyIncome
     if (dti <= maxDebtToIncome) met += 1
@@ -125,9 +155,7 @@ function scoreTermFit(product: FinancialProduct, termMonths?: number): number {
   if (termMonths >= product.termMonthsMin && termMonths <= product.termMonthsMax) return 1
 
   const distance =
-    termMonths < product.termMonthsMin
-      ? product.termMonthsMin - termMonths
-      : termMonths - product.termMonthsMax
+    termMonths < product.termMonthsMin ? product.termMonthsMin - termMonths : termMonths - product.termMonthsMax
 
   return Math.max(0, 1 - distance / 120)
 }
@@ -139,4 +167,10 @@ function estimatePayment(product: FinancialProduct, query: ProductQuery): number
   const periodicRate = toPeriodicRate(product.rateMin, 12, country.rules.quotesEffectiveAnnualRate)
 
   return periodicPayment(query.amount, periodicRate, query.termMonths)
+}
+
+/** Full cost over the term: every payment plus the upfront fee. Null without an amount and term. */
+function totalCost(product: FinancialProduct, query: ProductQuery): number | null {
+  const payment = estimatePayment(product, query)
+  return payment === null || query.termMonths === undefined ? null : payment * query.termMonths + product.originationFee
 }

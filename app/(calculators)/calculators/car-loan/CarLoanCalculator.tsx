@@ -1,6 +1,8 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { formatPercent } from '@/lib/utils/format-number'
+import { getBenchmarks } from '@/lib/countries'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
@@ -18,6 +20,7 @@ import { useCalculator } from '@/features/calculators/use-calculator'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { useI18n } from '@/lib/i18n/client'
 import type { CountryConfig } from '@/types/country'
+import { BestOffers } from '@/components/calculator/BestOffers'
 
 export interface CarLoanCalculatorProps {
   country: CountryConfig
@@ -26,13 +29,31 @@ export interface CarLoanCalculatorProps {
   related: ReactNode
 }
 
+/** Fields the calculator opens with empty (NaN): the user types their own numbers. */
+const START = { vehiclePrice: Number.NaN, downPayment: Number.NaN, annualRate: Number.NaN, termMonths: Number.NaN }
+
+/** The rate may be left empty: the market's average new-car loan rate is used then. */
+const RATE_FALLBACK = {
+  co: { annualRate: getBenchmarks('co').carLoanNew },
+  us: { annualRate: getBenchmarks('us').carLoanNew },
+  ca: { annualRate: getBenchmarks('ca').carLoanNew },
+}
+
 export function CarLoanCalculator({ country, initial, header, related }: CarLoanCalculatorProps) {
   const { t } = useI18n()
-  const { input, committed, errors, result, set, reset } = useCalculator(carLoanSchema, calculateCarLoan, initial)
+  const { input, committed, errors, result, set, ready, reset } = useCalculator(
+    carLoanSchema,
+    calculateCarLoan,
+    initial,
+    { start: START, fallback: RATE_FALLBACK[country.code] },
+  )
 
   const underwater = result.initialLoanToValue > 1
 
   const isCo = country.code === 'co'
+  // Used when the rate is left empty, quoted the way this market quotes rates.
+  const averageRate = RATE_FALLBACK[country.code].annualRate
+  const rateBasis = country.rules.quotesEffectiveAnnualRate ? t.rateInput.effectiveAnnual : t.products.rateBasis.nominal
 
   const figures: SummaryFigure[] = [
     {
@@ -51,6 +72,7 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
 
   return (
     <CalculatorLayout
+      ready={ready}
       header={header}
       related={related}
       form={
@@ -74,9 +96,10 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
           {/* Colombia: no trade-in, tax or fee fields; the page starts them at 0 so no
               cost the user cannot see or edit is added to the payment. */}
           {!isCo && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4">
               <CurrencyInput
                 id="trade-value"
+                optional
                 label={t.carLoan.tradeInValue}
                 currency={country.currency}
                 value={input.tradeInValue}
@@ -84,6 +107,7 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
               />
               <CurrencyInput
                 id="trade-owed"
+                optional
                 label={t.carLoan.tradeInOwed}
                 currency={country.currency}
                 value={input.tradeInOwed}
@@ -98,6 +122,9 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
             value={input.annualRate}
             error={errors.annualRate}
             onChange={(v) => set('annualRate', v)}
+            optional
+            fallback={averageRate}
+            fallbackNote={t.loan.averageRateNote(`${formatPercent(averageRate, country.locale)} ${rateBasis}`)}
           />
 
           {/* Car loans are usually quoted in months, so the field opens in months. */}
@@ -111,15 +138,17 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
           />
 
           {!isCo && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4">
               <PercentageInput
                 id="tax"
+                optional
                 label={t.carLoan.salesTax}
                 value={input.salesTaxRate}
                 onChange={(v) => set('salesTaxRate', v)}
               />
               <CurrencyInput
                 id="fees"
+                optional
                 label={t.carLoan.fees}
                 currency={country.currency}
                 value={input.feesAndRegistration}
@@ -189,6 +218,13 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
       }
       detail={
         <>
+          {/* The best options for the user, right under the results. */}
+          <BestOffers
+            category="car-loan"
+            country={country}
+            amount={result.amountFinanced}
+            termMonths={committed.termMonths}
+          />
           <AmortizationChart rows={result.schedule.rows} currency={result.currency} />
         </>
       }

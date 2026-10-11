@@ -15,6 +15,7 @@ export const es: Dictionary = {
     saving: 'Guardando…',
     signIn: 'Iniciar sesión',
     reset: 'Restablecer',
+    optional: 'Opcional',
     restart: 'Reiniciar',
     loading: 'Cargando',
     open: 'Abrir',
@@ -406,6 +407,8 @@ export const es: Dictionary = {
   calculatorForm: {
     title: 'Tus números',
     saveScenario: 'Guardar escenario',
+    emptyTitle: 'Ingresa tus números',
+    emptyBody: 'Completa los campos para ver tu cuota, cuánto pagarías en total y los mejores créditos para ti.',
   },
 
   whatIf: {
@@ -476,6 +479,24 @@ export const es: Dictionary = {
   },
 
   loan: {
+    rateOptional: 'Tasa de interés (opcional)',
+    income: 'Ingreso bruto anual',
+    purpose: 'Destino del crédito',
+    purposeNone: 'Sin especificar',
+    purposes: {
+      'debt-consolidation': 'Unificar deudas',
+      'home-improvement': 'Mejoras del hogar',
+      'major-purchase': 'Compra grande',
+      medical: 'Gastos médicos',
+      'car-repair': 'Reparación del carro',
+      other: 'Otro',
+    },
+    estimatedRateNote: (rate: string, band: string | null) =>
+      band
+        ? `Si la dejas vacía, usamos cerca de ${rate}, típica para un puntaje ${band}`
+        : `Si la dejas vacía, usamos ${rate}, la tasa promedio para este tipo de crédito. Agrega tu puntaje para una estimación más cercana`,
+    dtiLoan: 'Cuota de este crédito',
+    averageRateNote: (rate: string) => `Si la dejas vacía, usamos la tasa promedio para este tipo de crédito: ${rate}`,
     amount: 'Monto del crédito',
     frequency: 'Frecuencia de pago',
     frequencies: { monthly: 'Mensual', biweekly: 'Quincenal', weekly: 'Semanal' },
@@ -643,6 +664,7 @@ export const es: Dictionary = {
     target: 'Alcanzar una meta',
     targetAmount: 'Meta de ahorro',
     startingBalance: 'Saldo inicial',
+    startingBalanceHint: 'Déjalo vacío si empiezas de cero.',
     monthlyDeposit: 'Ahorro mensual',
     interestRate: 'Tasa de interés',
     timeFrame: 'Plazo',
@@ -665,8 +687,8 @@ export const es: Dictionary = {
     debtNameLabel: (i: number) => `Nombre de la deuda ${i}`,
     remove: (name: string) => `Eliminar ${name}`,
     balance: 'Saldo',
-    rate: 'Tasa',
-    minimum: 'Pago mínimo',
+    rate: 'Tasa de interés',
+    minimum: 'Pago mínimo mensual',
     addDebt: 'Agregar una deuda',
     newDebtName: (n: number) => `Deuda ${n}`,
     defaultNames: {
@@ -679,6 +701,9 @@ export const es: Dictionary = {
       `Los pagos mínimos suman ${minimums}. Todo lo que pagues por encima acelera el proceso.`,
     avalanche: 'Mayor tasa primero',
     snowball: 'Menor saldo primero',
+    strategyLabel: '¿Qué deuda pagas primero?',
+    avalancheHint: 'Pagas menos intereses en total',
+    snowballHint: 'Cierras deudas más rápido',
     debtFreeIn: 'Sin deudas en',
     totalInterest: 'Total de intereses',
     totalPaid: 'Total pagado',
@@ -822,12 +847,44 @@ export const es: Dictionary = {
     overTerm: (amount: string) => `+${amount} durante el plazo`,
     reasons: {
       lowestRate: 'La tasa más baja de estos resultados',
+      highestRate: 'La tasa más alta de estos resultados',
       noFee: 'Sin comisión de estudio',
       meetsRequirements: 'Cumples los requisitos indicados',
       needsScore: (score: number) => `Requiere un puntaje de crédito de ${score}`,
       incomeBelow: 'Ingresos por debajo del mínimo indicado',
       debtAbove: 'Tus deudas actuales superan el límite indicado',
+      amountAbove: (max: string) => `Presta hasta ${max}`,
+      amountBelow: (min: string) => `Presta desde ${min}`,
+      termOutside: (range: string) => `Plazos de ${range}`,
     },
+  },
+
+  // "Las mejores opciones para ti": entidades ordenadas bajo cada calculadora.
+  offers: {
+    title: {
+      mortgage: 'Los mejores créditos hipotecarios para ti',
+      'car-loan': 'Los mejores créditos de vehículo para ti',
+      'personal-loan': 'Los mejores créditos para ti',
+      savings: 'Las mejores cuentas de ahorro para ti',
+    },
+    subtitle: (amount: string, term: string) => `Ordenados para ${amount} a ${term}, por tasa, costos y si calificas.`,
+    savingsSubtitle: (amount: string) => `Ordenadas por tasa para un saldo de ${amount}.`,
+    sample: 'Entidades de ejemplo',
+    sampleNote: 'Estas entidades son ejemplos, no instituciones reales, hasta conectar tasas en vivo.',
+    rate: 'Tasa',
+    from: 'desde',
+    monthly: 'Cuota mensual estimada',
+    totalCost: 'Costo total',
+    yearly: 'Rinde en un año',
+    best: 'Mejor tasa',
+    likely: 'Probablemente calificas',
+    open: 'Sin requisitos por revisar',
+    viewOffer: 'Ver oferta',
+    viewAll: 'Ver todas las opciones',
+    loading: 'Buscando las mejores opciones…',
+    empty: 'Ninguna entidad de nuestra lista cubre este monto y plazo. Prueba cambiándolos.',
+    unavailable: 'No pudimos cargar las opciones en este momento.',
+    disclaimer: 'Estimaciones con la tasa más baja que anuncia cada entidad; tu oferta real depende de tu perfil.',
   },
 
   fields: {

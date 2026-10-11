@@ -56,6 +56,7 @@ export function CompareOffers({ country, amount: initialAmount, initialOffers }:
     <div className="mt-10 space-y-8">
       <div className="max-w-xs">
         <CurrencyInput
+          allowEmpty={false}
           id="amount"
           label={t.compare.amount}
           currency={country.currency}
@@ -84,12 +85,14 @@ export function CompareOffers({ country, amount: initialAmount, initialOffers }:
 
               <CardContent className="space-y-4">
                 <RateInput
+                  allowEmpty={false}
                   id={`${offer.id}-rate`}
                   country={country}
                   value={offer.annualRate}
                   onChange={(v) => update(offer.id, { annualRate: v })}
                 />
                 <TermInput
+                  allowEmpty={false}
                   id={`${offer.id}-term`}
                   label={t.compare.term}
                   months={offer.termMonths}
@@ -97,6 +100,7 @@ export function CompareOffers({ country, amount: initialAmount, initialOffers }:
                   onChange={(months) => update(offer.id, { termMonths: months })}
                 />
                 <CurrencyInput
+                  allowEmpty={false}
                   id={`${offer.id}-fee`}
                   label={t.compare.upfrontFees}
                   currency={country.currency}

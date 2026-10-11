@@ -61,7 +61,12 @@ export function CountrySelector({ value, onChange, className, fullWidth = false 
   }
 
   function openMenu() {
-    setHighlighted(Math.max(0, COUNTRY_LIST.findIndex((c) => c.code === value)))
+    setHighlighted(
+      Math.max(
+        0,
+        COUNTRY_LIST.findIndex((c) => c.code === value),
+      ),
+    )
     setOpen(true)
   }
 

@@ -30,4 +30,6 @@ export interface RankedProductList {
   total: number
   /** Best rate present in the result set, for the "from x%" label. */
   bestRate: number | null
+  /** True when the results come from the sample catalogue (fictional lenders), not real data. */
+  sample?: boolean
 }

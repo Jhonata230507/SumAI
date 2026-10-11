@@ -10,6 +10,8 @@ export interface DebtToIncomeProps {
   /** Null until an income is entered. */
   value: { front: number; back: number; frontLimit: number | null; backLimit: number } | null
   locale: string
+  /** Label for the first ratio; defaults to the housing payment (mortgages). */
+  frontLabel?: string
 }
 
 /** Bars run from 0 to this share of income, so typical guidelines sit mid-track. */
@@ -20,7 +22,7 @@ const SCALE = 0.6
  * monthly debts, each against the loan program's guideline. Status is shown
  * with an icon and a label, never colour alone.
  */
-export function DebtToIncome({ value, locale }: DebtToIncomeProps) {
+export function DebtToIncome({ value, locale, frontLabel }: DebtToIncomeProps) {
   const { t } = useI18n()
   const d = t.mortgage.us.dti
 
@@ -30,7 +32,7 @@ export function DebtToIncome({ value, locale }: DebtToIncomeProps) {
         <h2 className="text-sm font-medium">{d.title}</h2>
         {value ? (
           <>
-            <Ratio label={d.front} ratio={value.front} limit={value.frontLimit} locale={locale} />
+            <Ratio label={frontLabel ?? d.front} ratio={value.front} limit={value.frontLimit} locale={locale} />
             <Ratio label={d.back} ratio={value.back} limit={value.backLimit} locale={locale} />
             <p className="text-xs text-muted-foreground">{d.note}</p>
           </>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, type ReactNode } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { Plus, Trash2 } from 'lucide-react'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
@@ -12,29 +13,15 @@ import { RateInput } from '@/components/common/RateInput'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  calculateDebtPayoff,
-  compareStrategies,
-} from '@/features/calculators/debt-payoff/calculation'
-import {
-  debtPayoffSchema,
-  type DebtPayoffSchema,
-  type DebtSchema,
-} from '@/features/calculators/debt-payoff/schema'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { calculateDebtPayoff, compareStrategies } from '@/features/calculators/debt-payoff/calculation'
+import { debtPayoffSchema, type DebtPayoffSchema, type DebtSchema } from '@/features/calculators/debt-payoff/schema'
 import { useCalculator } from '@/features/calculators/use-calculator'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { formatMonths } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
 import type { CountryConfig } from '@/types/country'
+import { BestOffers } from '@/components/calculator/BestOffers'
 
 export interface DebtPayoffCalculatorProps {
   country: CountryConfig
@@ -45,14 +32,30 @@ export interface DebtPayoffCalculatorProps {
 
 export function DebtPayoffCalculator({ country, initial, header, related }: DebtPayoffCalculatorProps) {
   const { t } = useI18n()
-  const { input, committed, errors, result, set, update, reset } = useCalculator(
+  // Opens with one empty debt and no budget: the user types their own.
+  const start = useMemo(
+    () => ({
+      start: {
+        debts: initial.debts
+          .slice(0, 1)
+          .map((debt) => ({ ...debt, balance: Number.NaN, annualRate: Number.NaN, minimumPayment: Number.NaN })),
+        monthlyBudget: Number.NaN,
+      },
+    }),
+    [initial],
+  )
+  const { input, committed, errors, result, set, ready, update, reset } = useCalculator(
     debtPayoffSchema,
     calculateDebtPayoff,
     initial,
+    start,
   )
 
   const comparison = useMemo(() => compareStrategies(committed), [committed])
-  const minimums = input.debts.reduce((sum, debt) => sum + debt.minimumPayment, 0)
+  const minimums = input.debts.reduce(
+    (sum, debt) => sum + (Number.isFinite(debt.minimumPayment) ? debt.minimumPayment : 0),
+    0,
+  )
 
   function updateDebt(id: string, patch: Partial<DebtSchema>) {
     set(
@@ -86,13 +89,14 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
 
   return (
     <CalculatorLayout
+      ready={ready}
       header={header}
       related={related}
       form={
         <CalculatorForm title={t.debtPayoff.formTitle} onReset={reset} error={errors.monthlyBudget}>
           <div className="space-y-3">
             {input.debts.map((debt, index) => (
-              <div key={debt.id} className="space-y-3 rounded-lg border p-3">
+              <div key={debt.id} className="space-y-4 rounded-xl border border-white/[0.06] bg-muted/30 p-4">
                 <div className="flex items-center gap-2">
                   <Input
                     aria-label={t.debtPayoff.debtNameLabel(index + 1)}
@@ -120,23 +124,21 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
                   value={debt.balance}
                   onChange={(v) => updateDebt(debt.id, { balance: v })}
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <RateInput
-                    id={`${debt.id}-rate`}
-                    country={country}
-                    compact
-                    label={t.debtPayoff.rate}
-                    value={debt.annualRate}
-                    onChange={(v) => updateDebt(debt.id, { annualRate: v })}
-                  />
-                  <CurrencyInput
-                    id={`${debt.id}-minimum`}
-                    label={t.debtPayoff.minimum}
-                    currency={country.currency}
-                    value={debt.minimumPayment}
-                    onChange={(v) => updateDebt(debt.id, { minimumPayment: v })}
-                  />
-                </div>
+                {/* One field per row: the rate keeps room for its E.A./M.V. switch and note. */}
+                <RateInput
+                  id={`${debt.id}-rate`}
+                  country={country}
+                  label={t.debtPayoff.rate}
+                  value={debt.annualRate}
+                  onChange={(v) => updateDebt(debt.id, { annualRate: v })}
+                />
+                <CurrencyInput
+                  id={`${debt.id}-minimum`}
+                  label={t.debtPayoff.minimum}
+                  currency={country.currency}
+                  value={debt.minimumPayment}
+                  onChange={(v) => updateDebt(debt.id, { minimumPayment: v })}
+                />
               </div>
             ))}
 
@@ -149,24 +151,57 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
           <CurrencyInput
             id="budget"
             label={t.debtPayoff.budget}
-            hint={t.debtPayoff.budgetHint(formatCurrency(minimums, country.currency))}
+            hint={minimums > 0 ? t.debtPayoff.budgetHint(formatCurrency(minimums, country.currency)) : undefined}
             currency={country.currency}
             value={input.monthlyBudget}
             onChange={(v) => set('monthlyBudget', v)}
           />
 
-          <Tabs
-            defaultValue={input.strategy}
-            value={input.strategy}
-            onValueChange={(strategy) =>
-              update({ ...input, strategy: strategy as DebtPayoffSchema['strategy'] })
-            }
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="avalanche">{t.debtPayoff.avalanche}</TabsTrigger>
-              <TabsTrigger value="snowball">{t.debtPayoff.snowball}</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Strategy as two option cards: each says what it is good for. */}
+          <div className="space-y-1.5">
+            <p id="strategy-label" className="text-sm font-medium">
+              {t.debtPayoff.strategyLabel}
+            </p>
+            <div role="radiogroup" aria-labelledby="strategy-label" className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ['avalanche', t.debtPayoff.avalanche, t.debtPayoff.avalancheHint],
+                  ['snowball', t.debtPayoff.snowball, t.debtPayoff.snowballHint],
+                ] as const
+              ).map(([value, title, hint]) => {
+                const selected = input.strategy === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => update({ ...input, strategy: value })}
+                    className={cn(
+                      'rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      selected
+                        ? 'border-primary/60 bg-primary/[0.07]'
+                        : 'border-white/[0.06] bg-muted/30 hover:border-white/25',
+                    )}
+                  >
+                    <span className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-medium leading-snug">{title}</span>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                          selected ? 'border-primary bg-primary' : 'border-white/30',
+                        )}
+                      >
+                        {selected && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                      </span>
+                    </span>
+                    <span className="mt-1 block text-xs leading-snug text-muted-foreground">{hint}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </CalculatorForm>
       }
       results={
@@ -182,7 +217,12 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
                 format: 'months',
                 emphasis: 'primary',
               },
-              { key: 'totalInterest', label: t.debtPayoff.totalInterest, value: result.totalInterest, format: 'currency' },
+              {
+                key: 'totalInterest',
+                label: t.debtPayoff.totalInterest,
+                value: result.totalInterest,
+                format: 'currency',
+              },
               { key: 'totalPaid', label: t.debtPayoff.totalPaid, value: result.totalPaid, format: 'currency' },
             ]}
           />
@@ -240,6 +280,14 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
       }
       detail={
         <>
+          {/* The best options for the user, right under the results.
+               A consolidation loan for the whole balance, over a typical 1–5 year term. */}
+          <BestOffers
+            category="personal-loan"
+            country={country}
+            amount={committed.debts.reduce((sum, debt) => sum + debt.balance, 0)}
+            termMonths={Math.min(60, Math.max(12, result.monthsToDebtFree))}
+          />
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">{t.debtPayoff.payoffOrder}</CardTitle>
@@ -270,7 +318,6 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
               </Table>
             </CardContent>
           </Card>
-
         </>
       }
     />
