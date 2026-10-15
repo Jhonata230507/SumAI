@@ -236,7 +236,20 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
           />
         </>
       }
+      // Recommended credits beside the numbers; the AI explanation is set aside for now.
       assistant={
+        <BestOffers
+          variant="sidebar"
+          category="personal-loan"
+          country={country}
+          amount={committed.amount}
+          termMonths={committed.termMonths}
+          creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
+          monthlyIncome={monthlyIncome}
+          monthlyDebts={monthlyIncome ? (committed.monthlyDebts ?? 0) : undefined}
+        />
+      }
+      explanation={
         <AIAnalysis
           context={{
             calculatorId: 'loan',
@@ -260,16 +273,6 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
       }
       detail={
         <>
-          {/* The best options for the user, right under the results. */}
-          <BestOffers
-            category="personal-loan"
-            country={country}
-            amount={committed.amount}
-            termMonths={committed.termMonths}
-            creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
-            monthlyIncome={monthlyIncome}
-            monthlyDebts={monthlyIncome ? (committed.monthlyDebts ?? 0) : undefined}
-          />
           <AmortizationChart
             rows={result.schedule.rows}
             currency={result.currency}

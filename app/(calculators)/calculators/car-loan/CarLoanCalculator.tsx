@@ -198,7 +198,17 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
           </Card>
         </>
       }
+      // Recommended credits beside the numbers; the AI explanation is set aside for now.
       assistant={
+        <BestOffers
+          variant="sidebar"
+          category="car-loan"
+          country={country}
+          amount={result.amountFinanced}
+          termMonths={committed.termMonths}
+        />
+      }
+      explanation={
         <AIAnalysis
           context={{
             calculatorId: 'car-loan',
@@ -218,13 +228,6 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
       }
       detail={
         <>
-          {/* The best options for the user, right under the results. */}
-          <BestOffers
-            category="car-loan"
-            country={country}
-            amount={result.amountFinanced}
-            termMonths={committed.termMonths}
-          />
           <AmortizationChart rows={result.schedule.rows} currency={result.currency} />
         </>
       }

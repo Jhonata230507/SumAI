@@ -215,7 +215,9 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
           </Card>
         </>
       }
-      assistant={
+      // Recommended credits beside the numbers; the AI explanation is set aside for now.
+      assistant={<BestOffers variant="sidebar" category="savings" country={country} amount={plan.finalBalance} />}
+      explanation={
         <AIAnalysis
           context={{
             calculatorId: 'savings',
@@ -233,12 +235,7 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
           }}
         />
       }
-      detail={
-        <>
-          {/* The best options for the user, right under the results. */}
-          <BestOffers category="savings" country={country} amount={plan.finalBalance} />
-        </>
-      }
+      detail={<></>}
     />
   )
 }

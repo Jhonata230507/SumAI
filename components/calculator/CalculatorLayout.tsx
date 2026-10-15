@@ -13,6 +13,11 @@ export interface CalculatorLayoutProps {
   /** The AI explanation: a third column beside the form and results on wide screens. */
   assistant?: ReactNode
   aside?: ReactNode
+  /**
+   * The AI explanation ("What this means"). Not shown for now: the column it used
+   * shows the recommended credits instead. Kept so it can be placed again.
+   */
+  explanation?: ReactNode
   related?: ReactNode
   /**
    * Desktop: the form scrolls inside instead of stretching the row, keeping the
@@ -35,6 +40,9 @@ export interface CalculatorLayoutProps {
  * deliberate — on a phone the answer should be visible without scrolling past
  * the inputs the user just filled in.
  */
+// The header, form, results and recommendations show at once (Reveal instant):
+// a calculator is a tool, and fading it in for a second reads as slowness.
+// Only what sits further down (charts, related calculators) fades in.
 export function CalculatorLayout({
   header,
   form,
@@ -54,16 +62,16 @@ export function CalculatorLayout({
       <div className={cn('mx-auto max-w-6xl px-4 pb-8 pt-12', className)}>
         {/* Own wrapper: `header` comes from a server page, and React's dev key check
             misfires on server-created elements rendered beside static siblings. */}
-        <Reveal>{header}</Reveal>
+        <Reveal instant>{header}</Reveal>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
           <div className="order-2 lg:order-1">
-            <Reveal delay={80} className="lg:sticky lg:top-24">
+            <Reveal instant delay={80} className="lg:sticky lg:top-24">
               {form}
             </Reveal>
           </div>
 
-          <Reveal delay={160} className="order-1 space-y-6 lg:order-2">
+          <Reveal instant delay={160} className="order-1 space-y-6 lg:order-2">
             {ready ? (
               <>
                 {results}
@@ -90,7 +98,7 @@ export function CalculatorLayout({
   // so their bottoms line up. Nothing floats (no sticky columns) here.
   return (
     <div className={cn('mx-auto max-w-6xl px-4 pb-8 pt-12 xl:max-w-[88rem]', className)}>
-      <Reveal>{header}</Reveal>
+      <Reveal instant>{header}</Reveal>
 
       <div
         className={cn(
@@ -99,6 +107,7 @@ export function CalculatorLayout({
         )}
       >
         <Reveal
+          instant
           delay={80}
           className="order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-1 xl:row-span-1 [&>*]:h-full"
         >
@@ -109,6 +118,7 @@ export function CalculatorLayout({
         {!ready && (
           // Until the numbers are in, one prompt takes the results and explanation columns.
           <Reveal
+            instant
             delay={160}
             className="order-1 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-span-2 xl:row-span-1 [&>*]:h-full"
           >
@@ -120,6 +130,7 @@ export function CalculatorLayout({
             one marked data-grow, or else the last. */}
         {ready && (
           <Reveal
+            instant
             delay={160}
             className="order-1 flex flex-col gap-6 lg:order-none lg:col-start-2 lg:row-start-1 [&>*:last-child]:flex-1 has-[>[data-grow]]:[&>*:last-child]:flex-none [&>[data-grow]]:flex-1"
           >
@@ -130,6 +141,7 @@ export function CalculatorLayout({
 
         {ready && (
           <Reveal
+            instant
             delay={240}
             className="order-3 lg:order-none lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:[&>*]:h-full"
           >

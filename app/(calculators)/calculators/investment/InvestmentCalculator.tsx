@@ -1,9 +1,10 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
-import { ResultSummary } from '@/components/calculator/ResultSummary'
+import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
 import { GrowthChart } from '@/components/charts/GrowthChart'
 import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
@@ -15,7 +16,7 @@ import { calculateInvestment, yearsToDouble } from '@/features/calculators/inves
 import { investmentSchema, type InvestmentSchema } from '@/features/calculators/investment/schema'
 import { useCalculator } from '@/features/calculators/use-calculator'
 import { formatCurrency } from '@/lib/utils/format-currency'
-import { formatNumber } from '@/lib/utils/format-number'
+import { formatNumber, formatPercent } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
 import { FREQUENCY_PER_YEAR } from '@/types/common'
 import type { CountryConfig } from '@/types/country'
@@ -42,6 +43,31 @@ export function InvestmentCalculator({ country, initial, header, related }: Inve
 
   const doubling = yearsToDouble(committed.annualReturn - committed.feeRate)
   const compact = (value: number) => formatCurrency(value, result.currency, { compact: true })
+
+  const figures: SummaryFigure[] = [
+    {
+      key: 'finalBalance',
+      label: t.investment.balanceAfter(committed.years),
+      value: result.finalBalance,
+      format: 'currency',
+      emphasis: 'primary',
+      detail: t.investment.multiple(result.multiple),
+    },
+    {
+      key: 'realBalance',
+      label: t.investment.todaysMoney,
+      value: result.realBalance,
+      format: 'currency',
+      hint: t.investment.todaysMoneyHint,
+    },
+    {
+      key: 'totalContributed',
+      label: t.investment.contributed,
+      value: result.totalContributed,
+      format: 'currency',
+    },
+    { key: 'totalFees', label: t.investment.lostToFees, value: result.totalFees, format: 'currency' },
+  ]
 
   return (
     <CalculatorLayout
@@ -112,44 +138,24 @@ export function InvestmentCalculator({ country, initial, header, related }: Inve
       }
       results={
         <>
-          <ResultSummary
-            currency={result.currency}
-            locale={country.locale}
-            figures={[
-              {
-                key: 'finalBalance',
-                label: t.investment.balanceAfter(committed.years),
-                value: result.finalBalance,
-                format: 'currency',
-                emphasis: 'primary',
-                detail: t.investment.multiple(result.multiple),
-              },
-              {
-                key: 'realBalance',
-                label: t.investment.todaysMoney,
-                value: result.realBalance,
-                format: 'currency',
-                hint: t.investment.todaysMoneyHint,
-              },
-              {
-                key: 'totalContributed',
-                label: t.investment.contributed,
-                value: result.totalContributed,
-                format: 'currency',
-              },
-              { key: 'totalFees', label: t.investment.lostToFees, value: result.totalFees, format: 'currency' },
-            ]}
-          />
+          {/* The balance on its own, the other figures in one card. */}
+          <ResultSummary currency={result.currency} locale={country.locale} figures={figures.slice(0, 1)} />
+          <ResultSummary combined currency={result.currency} locale={country.locale} figures={figures.slice(1)} />
 
-          <Card>
-            <CardContent className="p-5">
+          {/* Fills the rest of the column: the three outcomes as columns sized to their value. */}
+          <Card className="flex flex-col">
+            <CardContent className="flex flex-1 flex-col p-5">
               <p className="text-sm font-medium">{t.investment.rangeTitle}</p>
               <p className="mt-1 text-xs text-muted-foreground">{t.investment.rangeIntro}</p>
-              <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
-                <RangeCell label={t.investment.weaker} value={compact(result.range.pessimistic)} />
-                <RangeCell label={t.investment.expected} value={compact(result.range.expected)} strong />
-                <RangeCell label={t.investment.stronger} value={compact(result.range.optimistic)} />
-              </dl>
+              <RangeBars
+                locale={country.locale}
+                items={[
+                  { key: 'weaker', label: t.investment.weaker, value: result.range.pessimistic },
+                  { key: 'expected', label: t.investment.expected, value: result.range.expected },
+                  { key: 'stronger', label: t.investment.stronger, value: result.range.optimistic },
+                ]}
+                format={compact}
+              />
               {Number.isFinite(doubling) && (
                 <p className="mt-4 text-xs text-muted-foreground">
                   {t.investment.doubling(formatNumber(doubling, country.locale, 1))}
@@ -159,7 +165,16 @@ export function InvestmentCalculator({ country, initial, header, related }: Inve
           </Card>
         </>
       }
-      assistant={
+      detail={
+        <GrowthChart
+          points={result.series.points}
+          currency={result.currency}
+          periodsPerYear={FREQUENCY_PER_YEAR[committed.contributionFrequency]}
+        />
+      }
+      // Recommended credits beside the numbers; the AI explanation is set aside for now.
+      assistant={<BestOffers variant="sidebar" category="savings" country={country} amount={result.finalBalance} />}
+      explanation={
         <AIAnalysis
           context={{
             calculatorId: 'investment',
@@ -176,27 +191,92 @@ export function InvestmentCalculator({ country, initial, header, related }: Inve
           }}
         />
       }
-      detail={
-        <>
-          {/* The best options for the user, right under the results.
-               High-yield savings: the low-risk place to start, next to the projected balance. */}
-          <BestOffers category="savings" country={country} amount={result.finalBalance} />
-          <GrowthChart
-            points={result.series.points}
-            currency={result.currency}
-            periodsPerYear={FREQUENCY_PER_YEAR[committed.contributionFrequency]}
-          />
-        </>
-      }
     />
   )
 }
 
-function RangeCell({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+const BAR_TONE = {
+  weaker: 'from-white/[0.05] to-white/[0.16]',
+  expected: 'from-[#2a6fd0] to-[#5ea4f2]',
+  stronger: 'from-[#147a5b]/70 to-[#4fd1a2]/80',
+} as const
+
+/**
+ * The three outcomes as bars on a shared baseline, sized to their value, with
+ * faint guide lines. The expected outcome leads (blue); the weaker and stronger
+ * ones show how far they sit from it.
+ */
+function RangeBars({
+  items,
+  format,
+  locale,
+}: {
+  items: { key: keyof typeof BAR_TONE; label: string; value: number }[]
+  format: (value: number) => string
+  locale: string
+}) {
+  const peak = Math.max(...items.map((item) => item.value), 1)
+  const expected = items.find((item) => item.key === 'expected')?.value ?? peak
+  const delta = (value: number) => {
+    const change = value / expected - 1
+    return `${change > 0 ? '+' : '−'}${formatPercent(Math.abs(change), locale, 0)}`
+  }
+
   return (
-    <div className={strong ? 'rounded-lg bg-primary/5 py-2' : 'py-2'}>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={strong ? 'mt-0.5 font-semibold tabular-nums' : 'mt-0.5 tabular-nums'}>{value}</dd>
-    </div>
+    <dl className="mt-5 flex min-h-44 flex-1 flex-col">
+      {/* Bars on a shared baseline, with faint guides at a third and two thirds. */}
+      <div className="relative flex flex-1 items-end gap-4 border-b border-white/[0.12] px-2">
+        <span aria-hidden className="absolute inset-x-0 top-1/3 border-t border-dashed border-white/[0.05]" />
+        <span aria-hidden className="absolute inset-x-0 top-2/3 border-t border-dashed border-white/[0.05]" />
+        {items.map((item) => {
+          const strong = item.key === 'expected'
+          return (
+            <div key={item.key} className="relative flex h-full flex-1 flex-col items-center justify-end">
+              <dd
+                className={cn(
+                  'mb-2 tabular-nums',
+                  strong ? 'text-lg font-semibold text-foreground' : 'text-sm font-medium text-foreground/75',
+                )}
+              >
+                {format(item.value)}
+              </dd>
+              <div
+                aria-hidden
+                className={cn(
+                  'w-full max-w-28 rounded-t-xl bg-gradient-to-t shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] transition-[height] duration-500',
+                  BAR_TONE[item.key],
+                )}
+                style={{ height: `${Math.max(0.06, Math.min(1, item.value / peak)) * 80}%` }}
+              />
+            </div>
+          )
+        })}
+      </div>
+      {/* Labels, with how far each outcome sits from the expected one. */}
+      <div className="mt-2.5 flex gap-4 px-2">
+        {items.map((item) => (
+          <dt key={item.key} className="flex flex-1 flex-col items-center text-center">
+            <span
+              className={cn(
+                'text-xs',
+                item.key === 'expected' ? 'font-medium text-foreground' : 'text-muted-foreground',
+              )}
+            >
+              {item.label}
+            </span>
+            {item.key !== 'expected' && (
+              <span
+                className={cn(
+                  'mt-0.5 text-[11px] tabular-nums',
+                  item.value < expected ? 'text-muted-foreground/70' : 'text-emerald-400/80',
+                )}
+              >
+                {delta(item.value)}
+              </span>
+            )}
+          </dt>
+        ))}
+      </div>
+    </dl>
   )
 }

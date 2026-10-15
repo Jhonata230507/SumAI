@@ -170,6 +170,7 @@ function Trend({
     .filter((year) => year === 1 || year % step === 0)
     .map((year) => (year - 1) * 12 + 1)
   const yearOf = (month: number) => Math.ceil(month / 12)
+  const yTicks = niceTicks(Math.max(...payments))
   const label = { fill: CHART_INK.dark.secondary, fontSize: 11 }
 
   return (
@@ -191,10 +192,21 @@ function Trend({
                 type="number"
                 domain={[1, n]}
                 ticks={ticks}
+                // Clear of the $0 tick in the corner.
+                tickMargin={10}
+                padding={{ left: 14, right: 4 }}
                 tickFormatter={(month: number) => `${t.charts.yearShort} ${yearOf(month)}`}
                 {...AXIS_PROPS}
               />
-              <YAxis {...AXIS_PROPS} width={72} domain={[0, 'auto']} tickCount={4} tickFormatter={compact} />
+              <YAxis
+                {...AXIS_PROPS}
+                width={72}
+                tickMargin={8}
+                // Round values with headroom above the line, so its label never meets the top tick.
+                domain={[0, yTicks.at(-1)!]}
+                ticks={yTicks}
+                tickFormatter={compact}
+              />
               <Tooltip
                 cursor={{ stroke: CHART_INK.dark.secondary, strokeOpacity: 0.4 }}
                 contentStyle={TOOLTIP_STYLE}
@@ -238,4 +250,15 @@ function Trend({
       </div>
     </figure>
   )
+}
+
+/** Axis ticks from 0 in round steps (1, 2, 2.5 or 5 × 10ⁿ), topping out ~15% above the peak. */
+function niceTicks(peak: number): number[] {
+  if (!(peak > 0)) return [0, 1]
+  const rough = (peak * 1.15) / 3
+  const magnitude = 10 ** Math.floor(Math.log10(rough))
+  const n = rough / magnitude
+  const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * magnitude
+  const top = Math.ceil((peak * 1.15) / step) * step
+  return Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step)
 }

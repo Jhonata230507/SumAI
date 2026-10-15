@@ -353,7 +353,20 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
           )}
         </>
       }
+      // Recommended credits beside the numbers; the AI explanation is set aside for now.
       assistant={
+        <BestOffers
+          variant="sidebar"
+          category="mortgage"
+          country={country}
+          amount={result.loanAmount}
+          termMonths={committed.termMonths}
+          creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
+          monthlyIncome={committed.annualIncome ? committed.annualIncome / 12 : undefined}
+          monthlyDebts={committed.annualIncome ? (committed.monthlyDebts ?? 0) : undefined}
+        />
+      }
+      explanation={
         <AIAnalysis
           context={{
             calculatorId: 'mortgage',
@@ -373,16 +386,6 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
       }
       detail={
         <>
-          {/* The best options for the user, right under the results. */}
-          <BestOffers
-            category="mortgage"
-            country={country}
-            amount={result.loanAmount}
-            termMonths={committed.termMonths}
-            creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
-            monthlyIncome={committed.annualIncome ? committed.annualIncome / 12 : undefined}
-            monthlyDebts={committed.annualIncome ? (committed.monthlyDebts ?? 0) : undefined}
-          />
           {/* Below the top row, full width, so the columns stay level without empty space. */}
           {whatIf}
           <AmortizationChart rows={chartRows} currency={result.currency} />

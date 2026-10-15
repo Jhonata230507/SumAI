@@ -257,7 +257,17 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
           </Card>
         </>
       }
+      // Recommended credits beside the numbers; the AI explanation is set aside for now.
       assistant={
+        <BestOffers
+          variant="sidebar"
+          category="personal-loan"
+          country={country}
+          amount={committed.debts.reduce((sum, debt) => sum + debt.balance, 0)}
+          termMonths={Math.min(60, Math.max(12, result.monthsToDebtFree))}
+        />
+      }
+      explanation={
         <AIAnalysis
           context={{
             calculatorId: 'debt-payoff',
@@ -280,14 +290,6 @@ export function DebtPayoffCalculator({ country, initial, header, related }: Debt
       }
       detail={
         <>
-          {/* The best options for the user, right under the results.
-               A consolidation loan for the whole balance, over a typical 1–5 year term. */}
-          <BestOffers
-            category="personal-loan"
-            country={country}
-            amount={committed.debts.reduce((sum, debt) => sum + debt.balance, 0)}
-            termMonths={Math.min(60, Math.max(12, result.monthsToDebtFree))}
-          />
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">{t.debtPayoff.payoffOrder}</CardTitle>

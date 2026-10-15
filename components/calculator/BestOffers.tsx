@@ -23,6 +23,8 @@ export interface BestOffersProps {
   creditScore?: number
   monthlyIncome?: number
   monthlyDebts?: number
+  /** 'grid': full-width row of cards. 'sidebar': one compact card for a narrow column. */
+  variant?: 'grid' | 'sidebar'
 }
 
 /** Listing page for each category, for "see all options". */
@@ -54,6 +56,7 @@ export function BestOffers({
   creditScore,
   monthlyIncome,
   monthlyDebts,
+  variant = 'grid',
 }: BestOffersProps) {
   const { t, language } = useI18n()
   const o = t.offers
@@ -108,6 +111,60 @@ export function BestOffers({
   const matches = state.data?.matches.slice(0, SHOWN) ?? []
   const bestRate = state.data?.bestRate ?? null
   const hasProfile = creditScore !== undefined || monthlyIncome !== undefined
+  const sample = Boolean(state.data?.sample)
+
+  if (variant === 'sidebar') {
+    return (
+      <Card className="flex flex-col">
+        <CardContent className="flex flex-1 flex-col gap-4 p-5">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 id={`offers-${category}`} className="text-base font-semibold tracking-tight">
+                {o.title[category]}
+              </h2>
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{subtitle}</p>
+          </div>
+
+          <section aria-labelledby={`offers-${category}`} className="space-y-2">
+            {state.status === 'loading' && !state.data ? (
+              Array.from({ length: SHOWN }, (_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
+            ) : state.status === 'error' ? (
+              <p className="text-sm text-muted-foreground">{o.unavailable}</p>
+            ) : matches.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{o.empty}</p>
+            ) : (
+              matches.map((match) => (
+                <OfferRow
+                  key={match.product.id}
+                  match={match}
+                  country={country}
+                  amount={amount}
+                  isBest={match.product.rateMin === bestRate}
+                  hasProfile={hasProfile}
+                />
+              ))
+            )}
+          </section>
+
+          {listing && (
+            <Link
+              href={listing}
+              className="group inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-[#ff8a63]"
+            >
+              {o.viewAll}
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </Link>
+          )}
+
+          <p className="mt-auto text-[11px] leading-relaxed text-muted-foreground/80">
+            {o.disclaimer}
+            {sample && ` ${o.sampleNote}`}
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <section aria-labelledby={`offers-${category}`} className="space-y-4">
@@ -310,6 +367,92 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-medium tabular-nums">{value}</dd>
+    </div>
+  )
+}
+
+/** One lender in the sidebar: who, the rate, what it means a month, and whether it fits. */
+function OfferRow({
+  match,
+  country,
+  amount,
+  isBest,
+  hasProfile,
+}: {
+  match: ProductMatch
+  country: CountryConfig
+  amount: number
+  isBest: boolean
+  hasProfile: boolean
+}) {
+  const { t } = useI18n()
+  const o = t.offers
+  const { product } = match
+  const lender = product.provider?.name ?? product.name
+  const money = (value: number) => formatCurrency(value, country.currency)
+  const basis = country.rules.quotesEffectiveAnnualRate ? t.products.rateBasis.effective : t.products.rateBasis.nominal
+  const tile = TILES[[...lender].reduce((sum, c) => sum + c.charCodeAt(0), 0) % TILES.length]
+  const r = t.products.reasons
+  const positives = new Set<string>([r.lowestRate, r.highestRate, r.noFee, r.meetsRequirements])
+  const blocker = !match.eligible ? match.reasons.find((reason) => !positives.has(reason)) : null
+  // Savings: what the account earns in a year, on its own line (too long for the side).
+  const earns = product.category === 'savings' ? `${o.yearly}: ${money(amount * product.rateMin)}` : null
+  const secondary =
+    product.category === 'savings'
+      ? null
+      : match.estimatedPayment !== null
+        ? `${money(match.estimatedPayment)} ${t.common.perMonthShort}`
+        : null
+
+  return (
+    <div className={cn('rounded-xl border px-4 py-4', isBest ? 'border-primary/50 bg-primary/[0.05]' : 'border-white/[0.06] bg-muted/30')}>
+      {/* Icon top-left, lender beside it; the best-rate tag sits top-right, above the rate. */}
+      <div className="flex items-start gap-2.5">
+        <span
+          aria-hidden
+          className={cn(
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-[11px] font-semibold text-white',
+            tile,
+          )}
+        >
+          {lender
+            .split(' ')
+            .slice(0, 2)
+            .map((word) => word[0])
+            .join('')}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-sm font-medium leading-tight">{lender}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{product.name}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end text-right">
+          {isBest && (
+            <span className="mb-1.5 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+              {o.best}
+            </span>
+          )}
+          <p className="text-sm font-semibold tabular-nums">
+            {formatPercent(product.rateMin, country.locale)} <span className="text-[11px] font-normal text-muted-foreground">{basis}</span>
+          </p>
+          {secondary && <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground/80">{secondary}</p>}
+        </div>
+      </div>
+      {earns && <p className="mt-2 text-xs font-medium tabular-nums text-foreground/80">{earns}</p>}
+      {(blocker || hasProfile) && (
+        <div className="mt-2 flex items-center gap-2 text-[11px]">
+          {blocker ? (
+            <span className="flex items-center gap-1 text-amber-300">
+              <TriangleAlert className="h-3 w-3 shrink-0" aria-hidden />
+              {blocker}
+            </span>
+          ) : hasProfile ? (
+            <span className="flex items-center gap-1 text-emerald-400">
+              <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden />
+              {o.likely}
+            </span>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }

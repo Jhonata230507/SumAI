@@ -9,6 +9,8 @@ export interface RevealProps {
   delay?: number
   className?: string
   as?: 'div' | 'section' | 'li'
+  /** Show at once, without the fade: for content people came to use, not to discover. */
+  instant?: boolean
 }
 
 /**
@@ -27,7 +29,7 @@ export interface RevealProps {
  * Content pinned in place (the home hero) never leaves the screen, so its
  * container resets it instead — see HeroStage.
  */
-export function Reveal({ children, delay = 0, className, as: Tag = 'div' }: RevealProps) {
+export function Reveal({ children, delay = 0, className, as: Tag = 'div', instant = false }: RevealProps) {
   const ref = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function Reveal({ children, delay = 0, className, as: Tag = 'div' }: Reve
   return (
     <Tag
       ref={ref as never}
-      className={cn('reveal', className)}
+      className={cn(!instant && 'reveal', className)}
       style={delay ? ({ '--reveal-delay': `${delay}ms` } as React.CSSProperties) : undefined}
     >
       {children}
