@@ -49,7 +49,7 @@ export function CalculatorCarousel() {
   return (
     <div className="w-full">
       {/* Heading row, on the page's content column. */}
-      <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-x-8 gap-y-4 px-4">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-x-8 gap-y-4 px-4 sm:px-6 lg:px-8">
         <h2 className="max-w-xl text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
           {c.title}
         </h2>
@@ -69,7 +69,12 @@ export function CalculatorCarousel() {
         className={cn(
           // pt-2 leaves room for the hover lift: a horizontal scroller also clips vertically.
           'mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pt-2',
+          // Aligns the first card with the heading above it: the content column's
+          // own gutter, or half the leftover width once the page hits 72rem.
+          // One step per breakpoint, matching the heading row's px-4/6/8.
           'px-[max(1rem,calc((100vw-72rem)/2+1rem))] scroll-px-[max(1rem,calc((100vw-72rem)/2+1rem))]',
+          'sm:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] sm:scroll-px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))]',
+          'lg:px-[max(2rem,calc((100vw-72rem)/2+2rem))] lg:scroll-px-[max(2rem,calc((100vw-72rem)/2+2rem))]',
           '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         )}
       >
@@ -107,7 +112,7 @@ export function CalculatorCarousel() {
       </div>
 
       {/* Prev / next, aligned with the right edge of the content column. */}
-      <div className="mx-auto mt-4 flex max-w-6xl justify-end gap-3 px-4">
+      <div className="mx-auto mt-4 flex max-w-6xl justify-end gap-3 px-4 sm:px-6 lg:px-8">
         <CarouselButton label={c.previous} disabled={atStart} onClick={() => step(-1)}>
           <ChevronLeft className="h-5 w-5" />
         </CarouselButton>

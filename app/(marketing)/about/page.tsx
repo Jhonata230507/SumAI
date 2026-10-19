@@ -10,7 +10,7 @@ export default async function AboutPage() {
   const { t } = await getRequestContext()
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-16">
+    <article className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
       <h1 className="text-4xl font-semibold tracking-tight">{t.about.title}</h1>
 
       <div className="mt-8 space-y-6 leading-relaxed text-muted-foreground">

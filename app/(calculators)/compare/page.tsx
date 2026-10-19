@@ -14,7 +14,7 @@ export default async function ComparePage() {
   const scale = defaultAmountScale(country.code)
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-4xl font-semibold tracking-tight">{t.compare.title}</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">{t.compare.intro}</p>
 

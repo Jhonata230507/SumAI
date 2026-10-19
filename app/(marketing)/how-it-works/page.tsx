@@ -12,7 +12,7 @@ export default async function HowItWorksPage() {
   const { t } = await getRequestContext()
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
       <h1 className="text-4xl font-semibold tracking-tight">{t.howItWorks.title}</h1>
       <p className="mt-4 text-lg text-muted-foreground">{t.howItWorks.subtitle}</p>
 

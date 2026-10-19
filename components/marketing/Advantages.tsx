@@ -59,7 +59,7 @@ export function Advantages({ country, t }: { country: CountryConfig; t: Dictiona
 
   return (
     <section className="pt-24">
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <h2 className="mx-auto max-w-3xl text-balance text-center text-4xl font-medium leading-[1.1] tracking-tight sm:text-5xl">
             <span className="text-foreground">{a.titleLead}</span>{' '}

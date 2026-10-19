@@ -24,7 +24,7 @@ export function Footer() {
 
   return (
     <footer className="border-t bg-card">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:px-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="flex items-center gap-2 font-semibold tracking-tight">
             <Image src="/logos/sumai-mark.png" alt="" width={16} height={24} className="h-6 w-auto" />
@@ -59,7 +59,7 @@ export function Footer() {
       </div>
 
       <div className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-xs leading-relaxed text-muted-foreground">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 text-xs leading-relaxed text-muted-foreground">
           <p>{t.footer.disclaimer}</p>
           <p className="mt-3">© {new Date().getFullYear()} SumAI</p>
         </div>

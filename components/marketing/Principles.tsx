@@ -29,7 +29,7 @@ const ACCENTS: Accent[] = [
 export function Principles({ items }: { items: { title: string; body: string }[] }) {
   return (
     <section className="py-24">
-      <div className="mx-auto grid max-w-6xl gap-5 px-4 md:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-5 px-4 sm:px-6 lg:px-8 md:grid-cols-3">
         {items.map((item, index) => {
           const accent = ACCENTS[index % ACCENTS.length]
           const Icon = accent.icon

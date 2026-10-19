@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ComparisonChart } from '@/components/charts/ComparisonChart'
+import { ComparisonChart } from '@/components/charts/lazy'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { formatPercent } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'

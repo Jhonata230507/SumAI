@@ -61,7 +61,7 @@ export function Testimonials() {
 
   return (
     <section className="overflow-clip py-24">
-      <div className="mx-auto max-w-6xl px-4 text-center">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
         <Reveal>
           <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-xs text-muted-foreground">
             {c.eyebrow}
@@ -159,7 +159,7 @@ export function Testimonials() {
           })}
         </div>
 
-        <div className="mx-auto max-w-xl px-4 text-center">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:px-8 text-center">
           <blockquote key={current.name} aria-live="polite" className="advantage-in">
             <p className="text-balance text-xl leading-relaxed text-foreground/90 sm:text-2xl">“{current.quote}”</p>
             <footer className="sr-only">

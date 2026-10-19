@@ -59,7 +59,7 @@ export function CalculatorLayout({
 
   if (!assistant) {
     return (
-      <div className={cn('mx-auto max-w-6xl px-4 pb-8 pt-12', className)}>
+      <div className={cn('mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-8 pt-12', className)}>
         {/* Own wrapper: `header` comes from a server page, and React's dev key check
             misfires on server-created elements rendered beside static siblings. */}
         <Reveal instant>{header}</Reveal>
@@ -97,7 +97,16 @@ export function CalculatorLayout({
   // The columns of that row share one height: each card stretches to the row,
   // so their bottoms line up. Nothing floats (no sticky columns) here.
   return (
-    <div className={cn('mx-auto max-w-6xl px-4 pb-8 pt-12 xl:max-w-[88rem]', className)}>
+    // The three-column row needs the extra width, but on a 13" laptop 88rem is
+    // wider than the screen, so the cap alone would leave the content hugging
+    // both edges. The wider gutter from xl up keeps it breathing there, and
+    // costs nothing on a large display where the cap bites first.
+    <div
+      className={cn(
+        'mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6 lg:px-8 xl:max-w-[88rem] xl:px-12',
+        className,
+      )}
+    >
       <Reveal instant>{header}</Reveal>
 
       <div

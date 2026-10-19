@@ -40,7 +40,7 @@ export function Header({ countryCode, signedIn = false }: HeaderProps) {
   ]
 
   return (
-    <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-4">
+    <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-4 lg:px-8">
       <div
         className={cn(
           'relative mx-auto flex h-14 max-w-6xl items-center gap-6 rounded-2xl border pl-4 pr-2 backdrop-blur-xl transition-[background-color,border-color,box-shadow] duration-300',
