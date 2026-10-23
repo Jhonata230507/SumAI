@@ -27,15 +27,23 @@ const P = {
   pacifico: provider('credito-pacifico', 'Crédito Pacífico', 'co', 3.9),
   cordillera: provider('cooperativa-cordillera', 'Cooperativa Cordillera', 'co', 4.4),
   altiplano: provider('financiera-altiplano', 'Financiera Altiplano', 'co', 3.7),
+  meridiano: provider('banco-meridiano', 'Banco Meridiano', 'co', 4.1),
+  sabana: provider('cooperativa-sabana', 'Cooperativa Sabana', 'co', 4.0),
+  orinoco: provider('financiera-orinoco', 'Financiera Orinoco', 'co', 3.6),
   // United States
   northbank: provider('northbank', 'Northbank', 'us', 4.4),
   harbor: provider('harbor-credit', 'Harbor Credit', 'us', 4.1),
   summit: provider('summit-lending', 'Summit Lending', 'us', 3.8),
   prairie: provider('prairie-credit-union', 'Prairie Credit Union', 'us', 4.6),
+  cedarline: provider('cedarline-bank', 'Cedarline Bank', 'us', 4.2),
+  bluegate: provider('bluegate-credit-union', 'Bluegate Credit Union', 'us', 4.5),
+  ironbridge: provider('ironbridge-lending', 'Ironbridge Lending', 'us', 3.7),
   // Canada
   maple: provider('maple-trust', 'Maple Trust', 'ca', 4.5),
   lakeshore: provider('lakeshore-bank', 'Lakeshore Bank', 'ca', 4.0),
   granite: provider('granite-credit-union', 'Granite Credit Union', 'ca', 4.3),
+  borealis: provider('borealis-bank', 'Borealis Bank', 'ca', 4.1),
+  harbourfront: provider('harbourfront-credit-union', 'Harbourfront Credit Union', 'ca', 4.4),
 }
 
 type Row = [
@@ -97,6 +105,44 @@ const ROWS: Row[] = [
   [P.granite, 'personal-loan', 'Consolidation Loan', 0.0949, 0.1799, 12, 60, 2e3, 40e3, 0, 620, 28e3, 0.44],
   [P.maple, 'savings', 'High-Interest Savings', 0.0325, 0.04, 1, 600, 0, 5e6, 0, null, null, null],
   [P.granite, 'savings', 'Member Savings', 0.0335, 0.039, 1, 600, 0, 5e6, 0, null, null, null],
+  // More sample lenders, so each listing has a real choice to rank.
+  // Colombia
+  [P.meridiano, 'mortgage', 'Hipotecario Meridiano', 0.119, 0.149, 60, 360, 40e6, 3e9, 0, 600, 24e6, 0.4],
+  [P.sabana, 'mortgage', 'Vivienda Sabana', 0.1265, 0.155, 60, 240, 30e6, 1.8e9, 0, 560, 18e6, 0.4],
+  [P.orinoco, 'mortgage', 'Casa Propia', 0.142, 0.172, 60, 240, 30e6, 1.2e9, 0, 540, 15e6, 0.45],
+  [P.meridiano, 'car-loan', 'Vehículo Meridiano', 0.1545, 0.199, 12, 84, 10e6, 450e6, 0, 580, 20e6, 0.4],
+  [P.sabana, 'car-loan', 'Moto y Carro', 0.169, 0.229, 12, 72, 5e6, 250e6, 0, 520, 12e6, 0.45],
+  [P.orinoco, 'car-loan', 'Usados Fácil', 0.185, 0.255, 12, 60, 5e6, 150e6, 0, 500, 10e6, 0.5],
+  [P.meridiano, 'personal-loan', 'Libre Destino', 0.1849, 0.2699, 12, 84, 1e6, 180e6, 0, 560, 15e6, 0.45],
+  [P.sabana, 'personal-loan', 'Crédito Solidario', 0.1999, 0.2799, 6, 72, 500e3, 80e6, 0, 500, 10e6, 0.5],
+  [P.orinoco, 'personal-loan', 'Préstamo Ágil', 0.2499, 0.2854, 3, 48, 300e3, 40e6, 0, 460, 8e6, 0.55],
+  [P.meridiano, 'savings', 'Ahorro Meta', 0.0895, 0.106, 1, 600, 0, 3e9, 0, null, null, null],
+  [P.sabana, 'savings', 'Ahorro Cooperativo', 0.0945, 0.112, 1, 600, 0, 1e9, 0, null, null, null],
+  [P.pacifico, 'savings', 'Cuenta Rentable', 0.091, 0.104, 1, 600, 0, 2e9, 0, null, null, null],
+
+  // United States
+  [P.cedarline, 'mortgage', '30-Year Fixed Plus', 0.0615, 0.0725, 180, 360, 75e3, 1.8e6, 1000, 660, 50e3, 0.45],
+  [P.bluegate, 'mortgage', 'Member Home Loan', 0.0589, 0.0699, 120, 360, 50e3, 1.2e6, 750, 680, 45e3, 0.43],
+  [P.ironbridge, 'mortgage', 'Flex Mortgage', 0.0695, 0.0815, 120, 360, 50e3, 1e6, 1800, 600, 35e3, 0.5],
+  [P.cedarline, 'car-loan', 'Auto Advantage', 0.0619, 0.1149, 24, 84, 5e3, 150e3, 0, 650, 30e3, 0.45],
+  [P.bluegate, 'car-loan', 'New & Used Auto', 0.0565, 0.0999, 12, 84, 3e3, 125e3, 0, 670, 28e3, 0.45],
+  [P.ironbridge, 'car-loan', 'Second Chance Auto', 0.0899, 0.1899, 24, 72, 5e3, 60e3, 0, 540, 22e3, 0.5],
+  [P.cedarline, 'personal-loan', 'Personal Loan', 0.0899, 0.1999, 24, 84, 3e3, 75e3, 0, 640, 35e3, 0.4],
+  [P.bluegate, 'personal-loan', 'Member Personal Loan', 0.0799, 0.1799, 12, 60, 500, 50e3, 0, 660, 30e3, 0.4],
+  [P.ironbridge, 'personal-loan', 'Fresh Start Loan', 0.1499, 0.3599, 12, 60, 1e3, 25e3, 300, 560, 18e3, 0.5],
+  [P.cedarline, 'savings', 'High-Yield Savings', 0.044, 0.046, 1, 600, 0, 5e6, 0, null, null, null],
+  [P.bluegate, 'savings', 'Member Savings Plus', 0.0415, 0.0445, 1, 600, 0, 5e6, 0, null, null, null],
+  [P.summit, 'savings', 'Online Savings', 0.0405, 0.043, 1, 600, 0, 5e6, 0, null, null, null],
+
+  // Canada
+  [P.borealis, 'mortgage', '5-Year Fixed', 0.0489, 0.0589, 60, 360, 50e3, 2e6, 0, 650, 50e3, 0.44],
+  [P.harbourfront, 'mortgage', 'Member Fixed', 0.0479, 0.0579, 60, 300, 50e3, 1.5e6, 0, 660, 45e3, 0.44],
+  [P.borealis, 'car-loan', 'Vehicle Loan', 0.0659, 0.1049, 12, 84, 5e3, 100e3, 0, 630, 30e3, 0.44],
+  [P.harbourfront, 'car-loan', 'Auto Loan', 0.0645, 0.0999, 12, 84, 5e3, 90e3, 0, 640, 28e3, 0.44],
+  [P.borealis, 'personal-loan', 'Personal Loan', 0.0929, 0.1849, 12, 60, 2e3, 50e3, 0, 630, 30e3, 0.44],
+  [P.harbourfront, 'personal-loan', 'Member Loan', 0.0899, 0.1699, 12, 60, 2e3, 40e3, 0, 640, 28e3, 0.44],
+  [P.borealis, 'savings', 'High-Interest Savings', 0.034, 0.041, 1, 600, 0, 5e6, 0, null, null, null],
+  [P.harbourfront, 'savings', 'Member Savings', 0.0345, 0.0395, 1, 600, 0, 5e6, 0, null, null, null],
 ]
 
 const CURRENCY = { co: 'COP', us: 'USD', ca: 'CAD' } as const

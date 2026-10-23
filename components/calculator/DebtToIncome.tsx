@@ -12,6 +12,10 @@ export interface DebtToIncomeProps {
   locale: string
   /** Label for the first ratio; defaults to the housing payment (mortgages). */
   frontLabel?: string
+  /** Only the first ratio (no other debts were asked for). */
+  single?: boolean
+  /** The guideline to show before an income is entered (with `single`). */
+  emptyLimit?: number
 }
 
 /** Bars run from 0 to this share of income, so typical guidelines sit mid-track. */
@@ -22,7 +26,7 @@ const SCALE = 0.6
  * monthly debts, each against the loan program's guideline. Status is shown
  * with an icon and a label, never colour alone.
  */
-export function DebtToIncome({ value, locale, frontLabel }: DebtToIncomeProps) {
+export function DebtToIncome({ value, locale, frontLabel, single = false, emptyLimit }: DebtToIncomeProps) {
   const { t } = useI18n()
   const d = t.mortgage.us.dti
 
@@ -33,18 +37,50 @@ export function DebtToIncome({ value, locale, frontLabel }: DebtToIncomeProps) {
         {value ? (
           <>
             <Ratio label={frontLabel ?? d.front} ratio={value.front} limit={value.frontLimit} locale={locale} />
-            <Ratio label={d.back} ratio={value.back} limit={value.backLimit} locale={locale} />
+            {!single && <Ratio label={d.back} ratio={value.back} limit={value.backLimit} locale={locale} />}
             <p className="text-xs text-muted-foreground">{d.note}</p>
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">{d.addIncome}</p>
+          // Before an income: the same layout, empty, so nothing jumps once it is typed.
+          <>
+            <div aria-hidden>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-muted-foreground">{frontLabel ?? d.front}</p>
+                <p className="text-xl tabular-nums tracking-tight text-muted-foreground/50">—</p>
+              </div>
+              <div className="relative mt-2 h-2 rounded-full bg-white/[0.06]">
+                {emptyLimit !== undefined && (
+                  <span
+                    className="absolute -inset-y-1 w-0.5 rounded-full bg-foreground/40"
+                    style={{ left: `${Math.min(emptyLimit / SCALE, 1) * 100}%` }}
+                  />
+                )}
+              </div>
+              {emptyLimit !== undefined && (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {d.guideline(formatPercent(emptyLimit, locale, 0))}
+                </p>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">{d.addIncome}</p>
+          </>
         )}
       </CardContent>
     </Card>
   )
 }
 
-function Ratio({ label, ratio, limit, locale }: { label: string; ratio: number; limit: number | null; locale: string }) {
+function Ratio({
+  label,
+  ratio,
+  limit,
+  locale,
+}: {
+  label: string
+  ratio: number
+  limit: number | null
+  locale: string
+}) {
   const { t } = useI18n()
   const d = t.mortgage.us.dti
   const over = limit !== null && ratio > limit

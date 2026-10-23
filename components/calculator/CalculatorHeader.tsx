@@ -30,7 +30,8 @@ export function CalculatorHeader({ calculator, country }: CalculatorHeaderProps)
       </nav>
 
       <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{text.title}</h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">{text.description}</p>
+      {/* Full width, so the subtitle sits on one line on laptop and desktop screens. */}
+      <p className="mt-3 text-muted-foreground">{text.description}</p>
 
       <p className="mt-4 text-xs text-muted-foreground">
         {t.calculatorHeader.showingFigures(

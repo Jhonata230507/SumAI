@@ -12,20 +12,54 @@ import { cn } from '@/lib/utils/cn'
  * the extra fields never makes the box shrink. The pinned actions (Restart)
  * stay at the bottom while the fields scroll.
  */
-export function FormColumn({ scrollable, children }: { scrollable: boolean; children: ReactNode }) {
+export function FormColumn({
+  scrollable,
+  peek,
+  children,
+}: {
+  scrollable: boolean
+  /** With `scrollable`: size the box to show exactly this many fields, the rest scroll. */
+  peek?: number
+  children: ReactNode
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [keepHeight, setKeepHeight] = useState<number | null>(null)
+
+  // Peek: the box ends just below the Nth field, plus room for the pinned actions.
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || !scrollable || !peek) return
+    const measure = () => {
+      const form = el.querySelector('form')
+      const scroller = el.querySelector<HTMLElement>('[data-form-scroller]')
+      if (!form || !scroller) return
+      const fields = [...form.children].filter(
+        (c) => !c.hasAttribute('data-form-actions') && c.getBoundingClientRect().height > 0,
+      )
+      const last = fields[Math.min(peek, fields.length) - 1]
+      const actions = form.querySelector<HTMLElement>('[data-form-actions]')
+      if (!last) return
+      const bottom = last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().top + scroller.scrollTop
+      // Below the Nth field: the gap, the pinned actions and the card padding.
+      setKeepHeight(Math.round(bottom + 16 + (actions?.offsetHeight ?? 0) + 24))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    const form = el.querySelector('form')
+    if (form) observer.observe(form)
+    return () => observer.disconnect()
+  }, [scrollable, peek])
 
   // Remember the in-flow height, so the scrollable box can keep it.
   useLayoutEffect(() => {
     const el = ref.current
-    if (!el || scrollable) return
+    if (!el || scrollable || peek) return
     const measure = () => setKeepHeight(el.offsetHeight)
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [scrollable])
+  }, [scrollable, peek])
 
   if (!scrollable) {
     return (
@@ -44,6 +78,7 @@ export function FormColumn({ scrollable, children }: { scrollable: boolean; chil
     >
       <div className="lg:min-h-[var(--keep-height)]" aria-hidden />
       <div
+        data-form-scroller
         className={cn(
           'lg:absolute lg:inset-0 lg:overflow-y-auto lg:rounded-2xl [&>*]:min-h-full',
           'lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(255,255,255,0.15)_transparent]',

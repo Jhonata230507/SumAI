@@ -620,6 +620,19 @@ export const es: Dictionary = {
     cashDown: 'Cuota inicial',
     tradeInValue: 'Valor de la retoma',
     tradeInOwed: 'Saldo pendiente',
+    condition: 'Estado del vehículo',
+    conditions: { new: 'Nuevo', used: 'Usado' },
+    zip: 'Código ZIP',
+    zipHint: 'Donde vas a registrar el carro, para el impuesto local',
+    taxAndFees: 'Impuestos y gastos',
+    feesLabel: 'Registro y gastos',
+    autoRateNote: (rate: string, condition: string, band: string | null) =>
+      band
+        ? `Si la dejas vacía, usamos cerca de ${rate}, típica para un carro ${condition.toLowerCase()} con puntaje ${band}`
+        : `Si la dejas vacía, usamos ${rate}, el promedio para un carro ${condition.toLowerCase()}. Agrega tu puntaje para una estimación más cercana`,
+    taxNote: (rate: string, state: string | null) =>
+      state ? `Si lo dejas vacío, usamos ${rate}, el promedio de ${state}` : `Si lo dejas vacío, usamos ${rate}, el promedio de EE. UU. Agrega tu ZIP para el de tu estado`,
+    feesNote: (amount: string) => `Si lo dejas vacío, usamos ${amount}, un total típico de título, registro y documentación`,
     termOption: (months: number) => `${months} meses (${months / 12} ${months === 12 ? 'año' : 'años'})`,
     salesTax: 'Impuestos',
     fees: 'Matrícula y gastos',
@@ -822,6 +835,10 @@ export const es: Dictionary = {
     amount: 'Monto',
     term: 'Plazo',
     fee: 'Comisión',
+    noFee: 'Sin comisión',
+    upTo: (rate: string) => `hasta ${rate}`,
+    sampleLender: 'Entidad de ejemplo',
+    sampleBanner: 'Estas entidades son ejemplos, no instituciones reales, hasta conectar tasas en vivo.',
     rate: 'Tasa',
     payment: 'Cuota',
     eligibility: 'Requisitos',

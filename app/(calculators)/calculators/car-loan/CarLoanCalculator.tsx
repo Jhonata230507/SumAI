@@ -21,6 +21,10 @@ import { formatCurrency } from '@/lib/utils/format-currency'
 import { useI18n } from '@/lib/i18n/client'
 import type { CountryConfig } from '@/types/country'
 import { BestOffers } from '@/components/calculator/BestOffers'
+import { DebtToIncome } from '@/components/calculator/DebtToIncome'
+import { TYPICAL_FEES, estimateAutoRate } from '@/features/calculators/car-loan/us'
+import { bandToScore } from '@/features/calculators/mortgage/us'
+import { UsCarLoanFields } from './UsCarLoanFields'
 
 export interface CarLoanCalculatorProps {
   country: CountryConfig
@@ -39,14 +43,43 @@ const RATE_FALLBACK = {
   ca: { annualRate: getBenchmarks('ca').carLoanNew },
 }
 
+/** US: price, down payment and term are typed; rate, tax and fees fall back to estimates. */
+const START_US = {
+  vehiclePrice: Number.NaN,
+  downPayment: Number.NaN,
+  termMonths: Number.NaN,
+  annualRate: Number.NaN,
+  // No sales tax field for the US: none is added, rather than an amount the user cannot see.
+  salesTaxRate: 0,
+  feesAndRegistration: Number.NaN,
+  tradeInValue: 0,
+  tradeInOwed: 0,
+}
+
+/** US estimates, recomputed from the inputs: the rate by condition and credit, and typical fees. */
+const US_FALLBACK = (input: CarLoanSchema) => ({
+  annualRate: estimateAutoRate(getBenchmarks('us'), input.condition, input.creditBand),
+  feesAndRegistration: TYPICAL_FEES,
+})
+
 export function CarLoanCalculator({ country, initial, header, related }: CarLoanCalculatorProps) {
   const { t } = useI18n()
+  const isUs = country.code === 'us'
   const { input, committed, errors, result, set, ready, reset } = useCalculator(
     carLoanSchema,
     calculateCarLoan,
     initial,
-    { start: START, fallback: RATE_FALLBACK[country.code] },
+    isUs ? { start: START_US, fallback: US_FALLBACK } : { start: START, fallback: RATE_FALLBACK[country.code] },
   )
+  // US: the rate used while the field is empty, and how lenders would see the loan.
+  const estimatedRate = estimateAutoRate(getBenchmarks('us'), input.condition, input.creditBand)
+  const monthlyIncome = committed.annualIncome ? committed.annualIncome / 12 : undefined
+  // The car payment against income (no other debts are asked for). Lenders and
+  // planners commonly keep it within about 15% of gross monthly income.
+  const debtToIncome =
+    isUs && monthlyIncome
+      ? { front: result.monthlyPayment / monthlyIncome, back: 0, frontLimit: 0.15, backLimit: 0 }
+      : null
 
   const underwater = result.initialLoanToValue > 1
 
@@ -65,7 +98,7 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
     },
     { key: 'amountFinanced', label: t.carLoan.amountFinanced, value: result.amountFinanced, format: 'currency' },
     { key: 'totalInterest', label: t.carLoan.totalInterest, value: result.totalInterest, format: 'currency' },
-    ...(isCo
+    ...(isCo || isUs
       ? []
       : [{ key: 'salesTax', label: t.carLoan.salesTax, value: result.salesTax, format: 'currency' as const }]),
   ]
@@ -73,101 +106,126 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
   return (
     <CalculatorLayout
       ready={ready}
+      // US: the first six fields show; the ones below the line scroll inside the form box.
+      scrollableForm={isUs}
+      formPeek={isUs ? 6 : undefined}
       header={header}
       related={related}
       form={
         <CalculatorForm onReset={reset}>
-          <CurrencyInput
-            id="price"
-            label={t.carLoan.vehiclePrice}
-            currency={country.currency}
-            value={input.vehiclePrice}
-            error={errors.vehiclePrice}
-            onChange={(v) => set('vehiclePrice', v)}
-          />
-          <CurrencyInput
-            id="down"
-            label={t.carLoan.cashDown}
-            currency={country.currency}
-            value={input.downPayment}
-            onChange={(v) => set('downPayment', v)}
-          />
+          {isUs ? (
+            <UsCarLoanFields
+              country={country}
+              input={input}
+              errors={errors}
+              estimatedRate={estimatedRate}
+              onChange={set}
+            />
+          ) : (
+            <>
+              <CurrencyInput
+                id="price"
+                label={t.carLoan.vehiclePrice}
+                currency={country.currency}
+                value={input.vehiclePrice}
+                error={errors.vehiclePrice}
+                onChange={(v) => set('vehiclePrice', v)}
+              />
+              <CurrencyInput
+                id="down"
+                label={t.carLoan.cashDown}
+                currency={country.currency}
+                value={input.downPayment}
+                onChange={(v) => set('downPayment', v)}
+              />
 
-          {/* Colombia: no trade-in, tax or fee fields; the page starts them at 0 so no
+              {/* Colombia: no trade-in, tax or fee fields; the page starts them at 0 so no
               cost the user cannot see or edit is added to the payment. */}
-          {!isCo && (
-            <div className="space-y-4">
-              <CurrencyInput
-                id="trade-value"
-                optional
-                label={t.carLoan.tradeInValue}
-                currency={country.currency}
-                value={input.tradeInValue}
-                onChange={(v) => set('tradeInValue', v)}
-              />
-              <CurrencyInput
-                id="trade-owed"
-                optional
-                label={t.carLoan.tradeInOwed}
-                currency={country.currency}
-                value={input.tradeInOwed}
-                onChange={(v) => set('tradeInOwed', v)}
-              />
-            </div>
-          )}
+              {!isCo && (
+                <div className="space-y-4">
+                  <CurrencyInput
+                    id="trade-value"
+                    optional
+                    label={t.carLoan.tradeInValue}
+                    currency={country.currency}
+                    value={input.tradeInValue}
+                    onChange={(v) => set('tradeInValue', v)}
+                  />
+                  <CurrencyInput
+                    id="trade-owed"
+                    optional
+                    label={t.carLoan.tradeInOwed}
+                    currency={country.currency}
+                    value={input.tradeInOwed}
+                    onChange={(v) => set('tradeInOwed', v)}
+                  />
+                </div>
+              )}
 
-          <RateInput
-            id="rate"
-            country={country}
-            value={input.annualRate}
-            error={errors.annualRate}
-            onChange={(v) => set('annualRate', v)}
-            optional
-            fallback={averageRate}
-            fallbackNote={t.loan.averageRateNote(`${formatPercent(averageRate, country.locale)} ${rateBasis}`)}
-          />
-
-          {/* Car loans are usually quoted in months, so the field opens in months. */}
-          <TermInput
-            id="term"
-            label={country.terminology.loanTerm}
-            months={input.termMonths}
-            defaultUnit="months"
-            max={120}
-            onChange={(months) => set('termMonths', months)}
-          />
-
-          {!isCo && (
-            <div className="space-y-4">
-              <PercentageInput
-                id="tax"
+              <RateInput
+                id="rate"
+                country={country}
+                value={input.annualRate}
+                error={errors.annualRate}
+                onChange={(v) => set('annualRate', v)}
                 optional
-                label={t.carLoan.salesTax}
-                value={input.salesTaxRate}
-                onChange={(v) => set('salesTaxRate', v)}
+                fallback={averageRate}
+                fallbackNote={t.loan.averageRateNote(`${formatPercent(averageRate, country.locale)} ${rateBasis}`)}
               />
-              <CurrencyInput
-                id="fees"
-                optional
-                label={t.carLoan.fees}
-                currency={country.currency}
-                value={input.feesAndRegistration}
-                onChange={(v) => set('feesAndRegistration', v)}
+
+              {/* Car loans are usually quoted in months, so the field opens in months. */}
+              <TermInput
+                id="term"
+                label={country.terminology.loanTerm}
+                months={input.termMonths}
+                defaultUnit="months"
+                max={120}
+                onChange={(months) => set('termMonths', months)}
               />
-            </div>
+
+              {!isCo && (
+                <div className="space-y-4">
+                  <PercentageInput
+                    id="tax"
+                    optional
+                    label={t.carLoan.salesTax}
+                    value={input.salesTaxRate}
+                    onChange={(v) => set('salesTaxRate', v)}
+                  />
+                  <CurrencyInput
+                    id="fees"
+                    optional
+                    label={t.carLoan.fees}
+                    currency={country.currency}
+                    value={input.feesAndRegistration}
+                    onChange={(v) => set('feesAndRegistration', v)}
+                  />
+                </div>
+              )}
+            </>
           )}
         </CalculatorForm>
       }
       results={
         <>
-          {isCo ? (
+          {isCo || isUs ? (
             <>
-              {/* Colombia: the payment on its own, the other figures in one card. */}
+              {/* The payment on its own, the other figures in one card. */}
               <ResultSummary currency={result.currency} locale={country.locale} figures={figures.slice(0, 1)} />
               <ResultSummary combined currency={result.currency} locale={country.locale} figures={figures.slice(1)} />
             </>
           ) : (
             <ResultSummary currency={result.currency} locale={country.locale} figures={figures} />
+          )}
+          {/* US: always on view; without an income it asks for one. */}
+          {isUs && (
+            <DebtToIncome
+              value={debtToIncome}
+              locale={country.locale}
+              frontLabel={t.loan.dtiLoan}
+              single
+              emptyLimit={0.15}
+            />
           )}
 
           <Card>
@@ -206,6 +264,8 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
           country={country}
           amount={result.amountFinanced}
           termMonths={committed.termMonths}
+          creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
+          monthlyIncome={monthlyIncome}
         />
       }
       explanation={
@@ -214,7 +274,11 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
             calculatorId: 'car-loan',
             countryCode: country.code,
             currency: result.currency,
-            inputs: { ...committed },
+            inputs: {
+              ...committed,
+              condition: committed.condition ?? 'not given',
+              creditBand: committed.creditBand ?? 'not given',
+            },
             results: {
               monthlyPayment: result.monthlyPayment,
               amountFinanced: result.amountFinanced,

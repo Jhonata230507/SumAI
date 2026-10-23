@@ -63,9 +63,22 @@ export async function CategoryListing({ category, calculatorHref }: CategoryList
             description={t.products.emptyDescription(text.title, t.countries[country.code])}
           />
         ) : (
-          ranked.matches.map((match, index) => (
-            <ProductCard key={match.product.id} match={match} country={country} position={index + 1} />
-          ))
+          <>
+            {ranked.sample && (
+              <p className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-3 text-xs text-amber-200">
+                {t.products.sampleBanner}
+              </p>
+            )}
+            {ranked.matches.map((match, index) => (
+              <ProductCard
+                key={match.product.id}
+                match={match}
+                country={country}
+                position={index + 1}
+                sample={ranked.sample}
+              />
+            ))}
+          </>
         )}
       </div>
 

@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { CREDIT_BANDS } from '@/features/calculators/mortgage/us'
+import { VEHICLE_CONDITIONS } from './us'
 import {
   countryCode,
   nonNegativeAmount,
@@ -17,6 +19,12 @@ export const carLoanSchema = z.object({
   annualRate: rate,
   termMonths: termMonths.max(96, 'carTermMax'),
   countryCode: countryCode.default('us'),
+  // US only, all optional: they sharpen the rate, tax and fee estimates and eligibility.
+  zip: z.string().optional(),
+  condition: z.enum(VEHICLE_CONDITIONS).nullable().optional(),
+  creditBand: z.enum(CREDIT_BANDS).nullable().optional(),
+  annualIncome: nonNegativeAmount.optional(),
+  monthlyDebts: nonNegativeAmount.optional(),
 })
 
 export type CarLoanSchema = z.infer<typeof carLoanSchema>

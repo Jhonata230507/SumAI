@@ -621,6 +621,19 @@ export const en = {
     cashDown: 'Cash down',
     tradeInValue: 'Trade-in value',
     tradeInOwed: 'Still owed on it',
+    condition: 'Vehicle condition',
+    conditions: { new: 'New', used: 'Used' },
+    zip: 'ZIP code',
+    zipHint: 'Where you will register the car, for the local sales tax',
+    taxAndFees: 'Sales tax and fees',
+    feesLabel: 'Registration and fees',
+    autoRateNote: (rate: string, condition: string, band: string | null) =>
+      band
+        ? `Leave it empty and we use about ${rate}, typical for a ${condition.toLowerCase()} car with a ${band} score`
+        : `Leave it empty and we use ${rate}, the average for a ${condition.toLowerCase()} car. Add your credit score for a closer estimate`,
+    taxNote: (rate: string, state: string | null) =>
+      state ? `Leave it empty and we use ${rate}, the ${state} average` : `Leave it empty and we use ${rate}, the US average. Add your ZIP for your state's`,
+    feesNote: (amount: string) => `Leave it empty and we use ${amount}, a typical title, registration and documentation total`,
     termOption: (months: number) => `${months} months (${months / 12} yr)`,
     salesTax: 'Sales tax',
     fees: 'Fees and registration',
@@ -821,6 +834,10 @@ export const en = {
     amount: 'Amount',
     term: 'Term',
     fee: 'Fee',
+    noFee: 'No fee',
+    upTo: (rate: string) => `up to ${rate}`,
+    sampleLender: 'Sample lender',
+    sampleBanner: 'These lenders are examples, not real institutions, until live rates are connected.',
     rate: 'Rate',
     payment: 'Payment',
     eligibility: 'Eligibility',
