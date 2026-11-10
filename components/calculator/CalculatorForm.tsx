@@ -20,6 +20,9 @@ export interface CalculatorFormProps {
  * Form shell. Calculators recompute as you type rather than on submit, so
  * there is no primary submit button — the submit handler only exists to stop
  * Enter from reloading the page.
+ *
+ * When the card stretches to its row, the actions (Restart) stay pinned to the
+ * bottom of it rather than following the last field.
  */
 export function CalculatorForm({
   title,
@@ -36,13 +39,13 @@ export function CalculatorForm({
   }
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader className="pb-4">
         <CardTitle className="text-base">{title ?? t.calculatorForm.title}</CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="flex flex-1 flex-col">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col space-y-4">
           {children}
 
           {error && (
@@ -52,7 +55,7 @@ export function CalculatorForm({
           )}
 
           {(onReset || onSave) && (
-            <div data-form-actions className="flex gap-2 border-t pt-4">
+            <div data-form-actions className="mt-auto flex gap-2 border-t pt-4">
               {onSave && (
                 <Button type="button" onClick={onSave} disabled={saving} className="flex-1">
                   {saving ? t.common.saving : t.calculatorForm.saveScenario}

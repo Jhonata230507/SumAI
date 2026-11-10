@@ -58,3 +58,8 @@ export const MortgageSystems = dynamic(
   () => import('../calculator/MortgageSystems').then((m) => m.MortgageSystems),
   { ssr: false, loading: () => <ChartSkeleton height={420} /> },
 )
+
+export const CarValueChart = dynamic(() => import('./CarValueChart').then((m) => m.CarValueChart), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={300} />,
+})

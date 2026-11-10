@@ -67,6 +67,8 @@ export const en = {
 
   footer: {
     tagline: 'Financial calculators that explain their own numbers.',
+    ctaLine: 'You decide. SumAI does the math.',
+    ctaButton: 'Try a calculator',
     calculators: 'Calculators',
     compare: 'Compare',
     company: 'Company',
@@ -220,6 +222,7 @@ export const en = {
       previous: 'Previous calculators',
       next: 'Next calculators',
       open: (name: string) => `Open the ${name}`,
+      openShort: 'Open',
       cards: {
         loan: {
           body: 'Your payment, the total interest and the exact payoff date — and what paying a little extra each month changes.',
@@ -466,6 +469,7 @@ export const en = {
 
   charts: {
     amortizationCaption: 'Where each year of payments goes',
+    amortizationMonthlyCaption: 'Where each monthly payment goes',
     principal: 'Principal',
     interest: 'Interest',
     yearShort: 'Yr',
@@ -640,6 +644,17 @@ export const en = {
     amountFinanced: 'Amount financed',
     totalInterest: 'Total interest',
     segments: { vehicle: 'Vehicle', salesTax: 'Sales tax', fees: 'Fees', interest: 'Interest' },
+    valueChart: {
+      caption: "The car's value vs. what you owe",
+      value: 'Car value',
+      owed: 'You owe',
+      endValue: 'Worth at the last payment',
+      lost: (pct: string) => `${pct} less than you paid`,
+      ahead: 'Worth more than you owe',
+      aheadFrom: (month: number) => `From month ${month}`,
+      aheadAlways: 'From day one',
+      note: 'Assumes the car loses about 20% of its value in the first year and 15% a year after that.',
+    },
     negativeEquity: (amount: string) =>
       `You owe ${amount} more on your trade-in than it is worth. That amount is added to this loan.`,
     underwater: 'You would owe more than the car is worth at signing.',
@@ -671,6 +686,23 @@ export const en = {
     stronger: 'Stronger',
     doubling: (years: string) =>
       `At this net return, money doubles roughly every ${years} years.`,
+    us: {
+      initial: 'Initial investment',
+      contribution: 'Recurring contribution',
+      frequency: 'Contribution frequency',
+      duration: 'Investment duration',
+      years: 'years',
+      expectedReturn: 'Expected annual return',
+      returnNote: (rate: string) => `Leave it empty and we use ${rate}, a long-run average for a diversified stock and bond mix`,
+      fees: 'Estimated annual fees',
+      feesNote: 'Leave it empty for no fees. Index funds often charge 0.03%–0.20% a year.',
+      inflation: 'Inflation assumption',
+      inflationNote: (rate: string) => `Leave it empty and we use ${rate}, recent US inflation`,
+      tax: 'Tax assumption',
+      taxNote: (rate: string) => `Leave it empty and we use ${rate}, the most common long-term capital-gains rate`,
+      afterTax: 'After taxes',
+      afterTaxHint: 'The balance after paying the tax assumption on the gains (not on what you put in).',
+    },
   },
 
   savings: {
@@ -694,6 +726,27 @@ export const en = {
     youDeposit: 'You deposit',
     interestEarned: 'Interest earned',
     chartCaption: 'Deposits and interest over time',
+    us: {
+      initialBalance: 'Initial savings balance',
+      goal: 'Savings goal',
+      contribution: 'Recurring contribution',
+      contributionHint: 'Leave it empty to see what you would need to save.',
+      frequency: 'Contribution frequency',
+      frequencies: { weekly: 'Weekly', biweekly: 'Every two weeks', monthly: 'Monthly', annually: 'Yearly' },
+      duration: 'Savings duration',
+      rate: 'Annual interest rate',
+      rateNote: (rate: string) => `Leave it empty and we use ${rate}, a typical high-yield savings rate`,
+      inflation: 'Inflation assumption',
+      inflationNote: (rate: string) => `Leave it empty and we use ${rate}, recent US inflation`,
+      needed: (frequency: string) => `Contribution needed · ${frequency.toLowerCase()}`,
+      projected: 'Projected balance',
+      goalToday: "Goal in today's money",
+      goalTodayHint: "What your goal would be worth in today's dollars, after inflation.",
+      onTrack: (extra: string) => `On track: you would finish ${extra} above your goal.`,
+      short: (gap: string) => `You would fall ${gap} short of your goal.`,
+      reachIn: (duration: string) => ` At this pace you reach it in ${duration}.`,
+      addContribution: 'Add a recurring contribution to see whether you are on track.',
+    },
   },
 
   debtPayoff: {

@@ -69,7 +69,7 @@ export function AdvantageTabs({
                 <div className="mt-8 lg:mt-auto lg:pt-10">
                   <Link
                     href={item.href}
-                    className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-[0_0_20px_-4px_rgba(255,122,79,0.55)] transition-[background-color,box-shadow] duration-300 hover:bg-[#ff8a63] hover:shadow-[0_0_32px_-2px_rgba(255,122,79,0.75)]"
+                    className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-[background-color,box-shadow] duration-300 hover:bg-white/85"
                   >
                     {item.cta}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />

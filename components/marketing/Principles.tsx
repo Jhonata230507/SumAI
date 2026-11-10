@@ -21,9 +21,9 @@ interface Accent {
 }
 
 const ACCENTS: Accent[] = [
-  { icon: Sigma, tile: 'from-[#ffa07f] to-[#f2603a]', glow: '255,122,79' },
-  { icon: MessageSquareText, tile: 'from-[#8b8af0] to-[#4a49c2]', glow: '91,91,214' },
-  { icon: Globe2, tile: 'from-[#4fd1a2] to-[#14906a]', glow: '63,176,103' },
+  { icon: Sigma, tile: 'from-white to-[#d6d6d6]', glow: '255,255,255' },
+  { icon: MessageSquareText, tile: 'from-white to-[#d6d6d6]', glow: '255,255,255' },
+  { icon: Globe2, tile: 'from-white to-[#d6d6d6]', glow: '255,255,255' },
 ]
 
 export function Principles({ items }: { items: { title: string; body: string }[] }) {
@@ -63,11 +63,11 @@ export function Principles({ items }: { items: { title: string; body: string }[]
                   {/* The icon: the only element that glows. */}
                   <span
                     className={cn(
-                      'relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br text-white',
+                      'relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br text-[#111]',
                       'transition-[box-shadow,transform] duration-500 group-hover:scale-105',
                       accent.tile,
-                      '[box-shadow:inset_0_1px_0_rgba(255,255,255,0.35),0_10px_30px_-6px_rgba(var(--glow),0.6),0_0_48px_-4px_rgba(var(--glow),0.45)]',
-                      'group-hover:[box-shadow:inset_0_1px_0_rgba(255,255,255,0.35),0_12px_36px_-4px_rgba(var(--glow),0.75),0_0_72px_0_rgba(var(--glow),0.6)]',
+                      '[box-shadow:inset_0_1px_0_rgba(255,255,255,0.6),0_8px_24px_-12px_rgba(0,0,0,0.6)]',
+                      'group-hover:[box-shadow:inset_0_1px_0_rgba(255,255,255,0.6),0_12px_30px_-10px_rgba(0,0,0,0.7)]',
                     )}
                     style={{ '--glow': accent.glow } as React.CSSProperties}
                   >

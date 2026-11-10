@@ -173,7 +173,7 @@ export function UsMortgageFields({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => onToggle(!open)}
-        className="group flex items-center gap-1.5 rounded-md text-sm font-medium text-primary transition-colors hover:text-[#ff8a63] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group flex items-center gap-1.5 rounded-md text-sm font-medium text-primary transition-colors hover:text-foreground/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <ChevronRight className={cn('h-4 w-4 transition-transform duration-200', open && 'rotate-90')} aria-hidden />
         {u.improveEstimates}

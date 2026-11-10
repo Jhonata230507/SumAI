@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, ChevronRight, Star, TriangleAlert } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,6 +35,7 @@ const LISTING: Partial<Record<ProductCategory, string>> = {
 }
 
 /** Tile colours for lender initials, picked by name so a lender keeps its colour. */
+// Bank initial tiles keep their identity colours (like logos).
 const TILES = ['from-[#ffa07f] to-[#f2603a]', 'from-[#8b8af0] to-[#4a49c2]', 'from-[#4fd1a2] to-[#14906a]']
 
 const SHOWN = 3
@@ -109,6 +110,25 @@ export function BestOffers({
     : o.subtitle(money(amount), formatMonths(termMonths ?? 0, country.locale))
   const listing = LISTING[category]
   const matches = state.data?.matches.slice(0, SHOWN) ?? []
+  // Sidebar: the matches after the first few, shown as far as the column has room.
+  const extras = state.data?.matches.slice(SHOWN) ?? []
+  const extrasRef = useRef<HTMLDivElement>(null)
+  const [extrasFit, setExtrasFit] = useState(0)
+
+  // Count the extra rows that fit whole in the free height. They sit absolutely
+  // inside it, so they never make the card (and the row) taller.
+  useLayoutEffect(() => {
+    const box = extrasRef.current
+    if (!box) return
+    const measure = () => {
+      const rows = [...box.querySelectorAll<HTMLElement>('[data-offer-row]')]
+      setExtrasFit(rows.filter((row) => row.offsetTop + row.offsetHeight <= box.clientHeight).length)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [variant, extras.length])
   const bestRate = state.data?.bestRate ?? null
   const hasProfile = creditScore !== undefined || monthlyIncome !== undefined
   const sample = Boolean(state.data?.sample)
@@ -126,7 +146,7 @@ export function BestOffers({
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{subtitle}</p>
           </div>
 
-          <section aria-labelledby={`offers-${category}`} className="space-y-2">
+          <section aria-labelledby={`offers-${category}`} className="flex flex-1 flex-col space-y-2">
             {state.status === 'loading' && !state.data ? (
               Array.from({ length: SHOWN }, (_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
             ) : state.status === 'error' ? (
@@ -145,19 +165,43 @@ export function BestOffers({
                 />
               ))
             )}
+
+            {/* Desktop: more lenders in the space the column has left; the ones that would be cut stay hidden. */}
+            {extras.length > 0 && (
+              <div ref={extrasRef} className="relative hidden flex-1 overflow-hidden lg:block">
+                <div className="absolute inset-x-0 top-0 space-y-2">
+                  {extras.map((match, index) => (
+                    <div
+                      key={match.product.id}
+                      data-offer-row
+                      aria-hidden={index >= extrasFit}
+                      className={cn(index >= extrasFit && 'invisible')}
+                    >
+                      <OfferRow
+                        match={match}
+                        country={country}
+                        amount={amount}
+                        isBest={match.product.rateMin === bestRate}
+                        hasProfile={hasProfile}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           {listing && (
             <Link
               href={listing}
-              className="group inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-[#ff8a63]"
+              className="group inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-foreground/75"
             >
               {o.viewAll}
               <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
             </Link>
           )}
 
-          <p className="mt-auto text-[11px] leading-relaxed text-muted-foreground/80">
+          <p className="text-[11px] leading-relaxed text-muted-foreground/80">
             {o.disclaimer}
             {sample && ` ${o.sampleNote}`}
           </p>
@@ -188,7 +232,7 @@ export function BestOffers({
         {listing && (
           <Link
             href={listing}
-            className="group inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-[#ff8a63]"
+            className="group inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-foreground/75"
           >
             {o.viewAll}
             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />

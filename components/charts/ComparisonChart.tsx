@@ -73,12 +73,18 @@ export function ComparisonChart({
             formatter={(value: number) => formatCurrency(value, currency)}
           />
 
-          <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={28}>
+          {/* Each bar runs over a faint track to the longest one, so the gaps read as distance. */}
+          <Bar
+            dataKey="value"
+            radius={[0, 6, 6, 0]}
+            maxBarSize={28}
+            background={{ fill: 'rgba(255,255,255,0.04)', radius: 6 }}
+          >
             {bars.map((bar, index) => (
               <Cell
                 key={index}
-                fill={bar.highlight ? colors.primary : colors.secondary}
-                fillOpacity={bar.highlight ? 1 : 0.75}
+                fill={bar.highlight ? colors.tertiary : colors.primary}
+                fillOpacity={bar.highlight ? 1 : 0.85}
               />
             ))}
             <LabelList

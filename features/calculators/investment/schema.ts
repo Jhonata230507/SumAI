@@ -16,6 +16,8 @@ export const investmentSchema = z.object({
   inflationRate: rate.default(0.03),
   contributionGrowth: rate.default(0),
   countryCode: countryCode.default('us'),
+  /** US: tax on the gains when the money is withdrawn, for the after-tax balance. */
+  taxRate: rate.optional(),
 })
 
 export type InvestmentSchema = z.infer<typeof investmentSchema>

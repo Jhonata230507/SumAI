@@ -53,7 +53,11 @@ export function WhatIfPanel({ options, currency, onApply, selectedId = null, wid
         <CardTitle className="text-base">{t.whatIf.title}</CardTitle>
       </CardHeader>
 
-      <CardContent className={wide ? 'grid gap-2 lg:grid-cols-2' : 'space-y-2'}>
+      <CardContent
+        className={
+          wide ? cn('grid gap-2', options.length === 3 ? 'md:grid-cols-3' : 'lg:grid-cols-2') : 'space-y-2'
+        }
+      >
         {options.map((option) => {
           const saves = option.costDelta < 0
           const text = t.whatIf.options[option.id] ?? option

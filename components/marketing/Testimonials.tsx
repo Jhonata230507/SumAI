@@ -127,7 +127,7 @@ export function Testimonials() {
                   className={cn(
                     'relative block h-full w-full overflow-hidden rounded-[1.4rem] transition-[box-shadow] duration-500',
                     center
-                      ? 'shadow-[0_0_0_4px_var(--primary),0_0_40px_-6px_rgba(255,122,79,0.6)]'
+                      ? ''
                       : 'shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)]',
                   )}
                 >
@@ -148,7 +148,7 @@ export function Testimonials() {
                   aria-hidden
                   className={cn(
                     'absolute -bottom-5 left-1/2 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground',
-                    'shadow-[0_0_24px_-4px_rgba(255,122,79,0.7)] ring-4 ring-background transition-[opacity,transform] duration-500',
+                    ' ring-4 ring-background transition-[opacity,transform] duration-500',
                     center ? 'scale-100 opacity-100 delay-200' : 'scale-50 opacity-0',
                   )}
                 >

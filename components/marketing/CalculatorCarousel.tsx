@@ -10,14 +10,25 @@ import { CalculatorArt } from './CalculatorArt'
 
 /**
  * Horizontal carousel of the six calculators, after the Apple "Why buy" row:
- * large heading and a "view all" link, then tall cards — category, headline,
- * a line of copy, an illustration and a round arrow — that scroll sideways.
+ * large heading and a "view all" link, then light "course" cards — a pastel
+ * panel (category chip, title, copy, a large illustration top-right) over a
+ * dark footer with a white "Open" pill — that scroll sideways.
  *
  * The track aligns its first card with the page's content column and bleeds
  * to the right edge, so the next card peeks in to show there is more. It
  * scrolls natively (swipe, trackpad, shift-wheel) with snap points per card;
  * the arrow buttons step one card and disable at either end.
  */
+/** Each calculator's pastel, after a light "course card" reference. */
+const PASTEL: Record<string, string> = {
+  loan: 'bg-[#fde2ef]',
+  mortgage: 'bg-[#dff1fb]',
+  'car-loan': 'bg-[#fbf6c6]',
+  investment: 'bg-[#dcf8e3]',
+  savings: 'bg-[#e9e3fb]',
+  'debt-payoff': 'bg-[#fde6d6]',
+}
+
 export function CalculatorCarousel() {
   const { t } = useI18n()
   const c = t.home.carousel
@@ -55,7 +66,7 @@ export function CalculatorCarousel() {
         </h2>
         <Link
           href="/calculators"
-          className="group inline-flex items-center gap-1 pb-2 text-sm font-medium text-primary transition-colors hover:text-[#ff8a63]"
+          className="group inline-flex items-center gap-1 pb-2 text-sm font-medium text-primary transition-colors hover:text-foreground/75"
         >
           {c.viewAll}
           <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -88,24 +99,32 @@ export function CalculatorCarousel() {
               href={`/calculators/${calculator.slug}`}
               aria-label={c.open(name)}
               className={cn(
-                'group relative flex h-[480px] w-[82vw] max-w-[340px] shrink-0 snap-start flex-col overflow-hidden rounded-[1.75rem]',
-                'border border-white/[0.06] bg-card p-7 transition-[border-color,transform] duration-300',
-                'hover:-translate-y-1 hover:border-white/25',
+                'group relative flex w-[82vw] max-w-[360px] shrink-0 snap-start flex-col overflow-hidden rounded-[1.75rem]',
+                'border border-white/[0.1] bg-[#2a2a2a] p-1.5 text-[#111] transition-[border-color,transform] duration-300 hover:-translate-y-1 hover:border-white/25',
               )}
             >
-              <p className="text-balance text-[1.6rem] font-semibold leading-[1.15] tracking-tight">
-                {name}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{card.body}</p>
+              {/* Pastel panel: chip, title, text and the illustration top-right. */}
+              <div className={cn('relative flex min-h-[15.5rem] flex-col rounded-[1.4rem] p-6', PASTEL[calculator.id])}>
+                <CalculatorArt
+                  id={calculator.id}
+                  className="pointer-events-none absolute -right-4 top-6 w-36 sm:top-1 sm:w-48 transition-transform duration-500 ease-out group-hover:scale-105"
+                />
+                <span className="w-fit rounded-full bg-black/[0.07] px-2.5 py-1 text-[11px] font-medium">
+                  {t.categories[calculator.category].label}
+                </span>
+                <p className="mt-4 max-w-[9.5rem] text-balance text-2xl font-semibold leading-[1.15] tracking-tight">
+                  {name}
+                </p>
+                <p className="mt-auto pt-6 line-clamp-3 text-[13px] leading-relaxed text-black/60">{card.body}</p>
+              </div>
 
-              <CalculatorArt
-                id={calculator.id}
-                className="mt-auto w-full transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-              />
-
-              <span className="absolute bottom-6 right-6 flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-foreground backdrop-blur transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </span>
+              {/* White footer: a note and the black pill. */}
+              <div className="flex items-center justify-end gap-3 px-5 py-3.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors group-hover:bg-white/85">
+                  {c.openShort}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
+              </div>
             </Link>
           )
         })}

@@ -84,6 +84,16 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
     }
   })
 
+  const whatIfPanel = (
+    <WhatIfPanel
+      wide={isUs}
+      options={whatIfs}
+      currency={result.currency}
+      selectedId={whatIfState.selectedId}
+      onApply={whatIfState.toggle}
+    />
+  )
+
   // US: the rate used while the field is empty, and how lenders would see the loan.
   const estimatedRate = isUs ? estimatePersonalLoanRate(getBenchmarks('us'), input.creditBand) : averageRate
   const monthlyIncome = committed.annualIncome ? committed.annualIncome / 12 : undefined
@@ -137,7 +147,10 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
     <CalculatorLayout
       ready={ready}
       // US: with the optional fields open the form is long; it scrolls instead of stretching the results.
-      scrollableForm={isUs && estimatesOpen}
+      scrollableForm={isUs && (estimatesOpen || ready)}
+      // US, with results: the form takes the height of the results and offers and
+      // scrolls, so neither column stretches to a long form with empty space.
+      formFit={isUs && ready}
       header={header}
       related={related}
       form={
@@ -228,12 +241,7 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
             <ResultSummary figures={figures} currency={result.currency} locale={country.locale} />
           )}
           {debtToIncome && <DebtToIncome value={debtToIncome} locale={country.locale} frontLabel={t.loan.dtiLoan} />}
-          <WhatIfPanel
-            options={whatIfs}
-            currency={result.currency}
-            selectedId={whatIfState.selectedId}
-            onApply={whatIfState.toggle}
-          />
+          {!isUs && whatIfPanel}
         </>
       }
       // Recommended credits beside the numbers; the AI explanation is set aside for now.
@@ -273,6 +281,8 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
       }
       detail={
         <>
+          {/* US: full width under the three columns, so the form, results and offers end level. */}
+          {isUs && whatIfPanel}
           <AmortizationChart
             rows={result.schedule.rows}
             currency={result.currency}

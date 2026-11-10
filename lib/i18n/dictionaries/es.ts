@@ -66,6 +66,8 @@ export const es: Dictionary = {
 
   footer: {
     tagline: 'Calculadoras financieras que explican sus propios números.',
+    ctaLine: 'Tú decides. SumAI hace las cuentas.',
+    ctaButton: 'Probar una calculadora',
     calculators: 'Calculadoras',
     compare: 'Comparar',
     company: 'Empresa',
@@ -219,6 +221,7 @@ export const es: Dictionary = {
       previous: 'Calculadoras anteriores',
       next: 'Siguientes calculadoras',
       open: (name: string) => `Abrir la ${name.toLowerCase()}`,
+      openShort: 'Abrir',
       cards: {
         loan: {
           body: 'Tu cuota, el total de intereses y la fecha exacta de pago — y lo que cambia si abonas un poco más cada mes.',
@@ -465,6 +468,7 @@ export const es: Dictionary = {
 
   charts: {
     amortizationCaption: 'A dónde va cada año de pagos',
+    amortizationMonthlyCaption: 'A dónde va cada cuota mensual',
     principal: 'Capital',
     interest: 'Intereses',
     yearShort: 'Año',
@@ -639,6 +643,17 @@ export const es: Dictionary = {
     amountFinanced: 'Monto financiado',
     totalInterest: 'Total de intereses',
     segments: { vehicle: 'Vehículo', salesTax: 'Impuestos', fees: 'Gastos', interest: 'Intereses' },
+    valueChart: {
+      caption: 'Lo que vale el carro vs. lo que debes',
+      value: 'Valor del carro',
+      owed: 'Lo que debes',
+      endValue: 'Valor al pagar la última cuota',
+      lost: (pct: string) => `${pct} menos de lo que pagaste`,
+      ahead: 'Vale más de lo que debes',
+      aheadFrom: (month: number) => `Desde el mes ${month}`,
+      aheadAlways: 'Desde el primer día',
+      note: 'Supone que el carro pierde cerca del 20% de su valor el primer año y 15% cada año después.',
+    },
     negativeEquity: (amount: string) =>
       `Debes ${amount} más de lo que vale tu carro de retoma. Ese monto se suma a este crédito.`,
     underwater: 'Al firmar, deberías más de lo que vale el carro.',
@@ -670,6 +685,23 @@ export const es: Dictionary = {
     stronger: 'Mayor',
     doubling: (years: string) =>
       `Con esta rentabilidad neta, el dinero se duplica más o menos cada ${years} años.`,
+    us: {
+      initial: 'Inversión inicial',
+      contribution: 'Aporte recurrente',
+      frequency: 'Frecuencia del aporte',
+      duration: 'Duración de la inversión',
+      years: 'años',
+      expectedReturn: 'Rentabilidad anual esperada',
+      returnNote: (rate: string) => `Si la dejas vacía, usamos ${rate}, un promedio de largo plazo para una mezcla diversificada de acciones y bonos`,
+      fees: 'Comisiones anuales estimadas',
+      feesNote: 'Déjalo vacío si no hay comisiones. Los fondos indexados suelen cobrar 0,03%–0,20% al año.',
+      inflation: 'Inflación supuesta',
+      inflationNote: (rate: string) => `Si la dejas vacía, usamos ${rate}, la inflación reciente de EE. UU.`,
+      tax: 'Impuestos supuestos',
+      taxNote: (rate: string) => `Si lo dejas vacío, usamos ${rate}, la tasa más común de ganancias de capital a largo plazo`,
+      afterTax: 'Después de impuestos',
+      afterTaxHint: 'El saldo tras pagar el impuesto supuesto sobre las ganancias (no sobre lo que aportaste).',
+    },
   },
 
   savings: {
@@ -693,6 +725,27 @@ export const es: Dictionary = {
     youDeposit: 'Tus depósitos',
     interestEarned: 'Intereses ganados',
     chartCaption: 'Depósitos e intereses en el tiempo',
+    us: {
+      initialBalance: 'Saldo inicial de ahorro',
+      goal: 'Meta de ahorro',
+      contribution: 'Aporte recurrente',
+      contributionHint: 'Déjalo vacío para ver cuánto necesitarías ahorrar.',
+      frequency: 'Frecuencia del aporte',
+      frequencies: { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual', annually: 'Anual' },
+      duration: 'Duración del ahorro',
+      rate: 'Tasa de interés anual',
+      rateNote: (rate: string) => `Si la dejas vacía, usamos ${rate}, una tasa típica de ahorro de alto rendimiento`,
+      inflation: 'Inflación supuesta',
+      inflationNote: (rate: string) => `Si la dejas vacía, usamos ${rate}, la inflación reciente de EE. UU.`,
+      needed: (frequency: string) => `Aporte necesario · ${frequency.toLowerCase()}`,
+      projected: 'Saldo proyectado',
+      goalToday: 'Meta en dinero de hoy',
+      goalTodayHint: 'Lo que valdría tu meta en dólares de hoy, después de la inflación.',
+      onTrack: (extra: string) => `Vas bien: terminarías ${extra} por encima de tu meta.`,
+      short: (gap: string) => `Te faltarían ${gap} para tu meta.`,
+      reachIn: (duration: string) => ` A este ritmo la alcanzas en ${duration}.`,
+      addContribution: 'Agrega un aporte recurrente para ver si vas bien.',
+    },
   },
 
   debtPayoff: {

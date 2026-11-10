@@ -16,8 +16,8 @@ import type { CountryConfig } from '@/types/country'
  * Visuals are built here on the server; the tab behaviour lives in
  * AdvantageTabs. The rate visual is anchored to the country's real benchmark
  * and quoting convention, but the lenders and the profile are illustrative and
- * labelled as such — no real lender or applicant is implied. The only glow is
- * on the icons.
+ * labelled as such — no real lender or applicant is implied. Icons sit on flat
+ * white tiles; nothing glows.
  */
 export function Advantages({ country, t }: { country: CountryConfig; t: Dictionary }) {
   const a = t.home.advantages
@@ -28,7 +28,7 @@ export function Advantages({ country, t }: { country: CountryConfig; t: Dictiona
     {
       key: 'rate',
       tab: a.rate.tab,
-      icon: <IconTile icon={BadgePercent} tile="from-[#ffa07f] to-[#f2603a]" glow="255,122,79" />,
+      icon: <IconTile icon={BadgePercent} tile="from-white to-[#d6d6d6]" glow="255,255,255" />,
       title: a.rate.title,
       body: a.rate.body,
       cta: a.rate.cta,
@@ -38,7 +38,7 @@ export function Advantages({ country, t }: { country: CountryConfig; t: Dictiona
     {
       key: 'fit',
       tab: a.fit.tab,
-      icon: <IconTile icon={Scale} tile="from-[#8b8af0] to-[#4a49c2]" glow="91,91,214" />,
+      icon: <IconTile icon={Scale} tile="from-white to-[#d6d6d6]" glow="255,255,255" />,
       title: a.fit.title,
       body: a.fit.body,
       cta: a.fit.cta,
@@ -48,7 +48,7 @@ export function Advantages({ country, t }: { country: CountryConfig; t: Dictiona
     {
       key: 'eligibility',
       tab: a.eligibility.tab,
-      icon: <IconTile icon={ShieldCheck} tile="from-[#4fd1a2] to-[#14906a]" glow="63,176,103" />,
+      icon: <IconTile icon={ShieldCheck} tile="from-white to-[#d6d6d6]" glow="255,255,255" />,
       title: a.eligibility.title,
       body: a.eligibility.body,
       cta: a.eligibility.cta,
@@ -89,9 +89,9 @@ function IconTile({ icon: Icon, tile, glow }: { icon: LucideIcon; tile: string; 
   return (
     <span
       className={cn(
-        'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white',
+        'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-[#111]',
         tile,
-        '[box-shadow:inset_0_1px_0_rgba(255,255,255,0.35),0_10px_30px_-6px_rgba(var(--glow),0.6),0_0_40px_-6px_rgba(var(--glow),0.45)]',
+        '[box-shadow:inset_0_1px_0_rgba(255,255,255,0.6),0_8px_24px_-12px_rgba(0,0,0,0.6)]',
       )}
       style={{ '--glow': glow } as React.CSSProperties}
     >

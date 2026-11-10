@@ -5,6 +5,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { useI18n } from '@/lib/i18n/client'
 import { AXIS_PROPS, CHART_INK, GRID_PROPS, TOOLTIP_STYLE, seriesColors } from './theme'
+import { ChartLegend } from './ChartLegend'
 import type { GrowthPoint } from '@/lib/calculations/compound-interest'
 import type { CurrencyCode } from '@/types/currency'
 
@@ -52,10 +53,12 @@ export function GrowthChart({ points, currency, periodsPerYear = 12, height = 30
         <figcaption className="text-sm font-medium">{caption ?? t.charts.growthCaption}</figcaption>
         {/* Legend with where each band ends up, instead of a bare key under the chart. */}
         {last && (
-          <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
-            <LegendItem color={colors.primary} label={t.charts.contributed} value={short(last.contributions)} />
-            <LegendItem color={colors.tertiary} label={t.charts.growth} value={short(last.growth)} />
-          </ul>
+          <ChartLegend
+            items={[
+              { color: colors.primary, label: t.charts.contributed, value: short(last.contributions) },
+              { color: colors.tertiary, label: t.charts.growth, value: short(last.growth) },
+            ]}
+          />
         )}
       </div>
 
@@ -63,12 +66,12 @@ export function GrowthChart({ points, currency, periodsPerYear = 12, height = 30
         <AreaChart data={data} margin={{ top: 8, right: 28, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id={`${id}-c`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={colors.primary} stopOpacity={0.9} />
-              <stop offset="1" stopColor={colors.primary} stopOpacity={0.5} />
+              <stop offset="0" stopColor={colors.primary} stopOpacity={0.55} />
+              <stop offset="1" stopColor={colors.primary} stopOpacity={0.12} />
             </linearGradient>
             <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={colors.tertiary} stopOpacity={0.85} />
-              <stop offset="1" stopColor={colors.tertiary} stopOpacity={0.45} />
+              <stop offset="0" stopColor={colors.tertiary} stopOpacity={0.5} />
+              <stop offset="1" stopColor={colors.tertiary} stopOpacity={0.1} />
             </linearGradient>
           </defs>
           <CartesianGrid {...GRID_PROPS} />
@@ -128,16 +131,6 @@ export function GrowthChart({ points, currency, periodsPerYear = 12, height = 30
         </AreaChart>
       </ResponsiveContainer>
     </figure>
-  )
-}
-
-function LegendItem({ color, label, value }: { color: string; label: string; value: string }) {
-  return (
-    <li className="flex items-center gap-1.5">
-      <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium tabular-nums text-foreground">{value}</span>
-    </li>
   )
 }
 

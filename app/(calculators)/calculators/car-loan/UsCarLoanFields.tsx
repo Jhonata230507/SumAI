@@ -92,7 +92,6 @@ export function UsCarLoanFields({ country, input, errors, estimatedRate, onChang
         id="term"
         label={country.terminology.loanTerm}
         months={input.termMonths}
-        defaultUnit="years"
         max={96}
         onChange={(months) => onChange('termMonths', months)}
       />

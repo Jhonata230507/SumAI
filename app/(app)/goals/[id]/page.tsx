@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ResultSummary } from '@/components/calculator/ResultSummary'
 import { GoalProgress } from '@/components/goals/GoalProgress'
 import { GrowthChart } from '@/components/charts/lazy'
+import { CHART_PANEL } from '@/components/charts/theme'
 import { getGoal } from '@/features/goals/goal-store'
 import { calculateGoal } from '@/features/goals/calculate-goal'
 import { projectGoalVariants } from '@/features/goals/project-goal'
@@ -126,15 +127,13 @@ export default async function GoalPage({ params }: GoalPageProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-6">
-          <GrowthChart
-            points={projection.series.points}
-            currency={country.currency}
-            caption={t.goals.chartCaption}
-          />
-        </CardContent>
-      </Card>
+      <div className={CHART_PANEL}>
+        <GrowthChart
+          points={projection.series.points}
+          currency={country.currency}
+          caption={t.goals.chartCaption}
+        />
+      </div>
     </div>
   )
 }

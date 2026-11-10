@@ -18,6 +18,8 @@ export const savingsSchema = z
     months: termMonths,
     targetAmount: nonNegativeAmount.nullable().default(null),
     countryCode: countryCode.default('us'),
+    /** US: an inflation assumption, to show the goal in today's money. */
+    inflationRate: rate.optional(),
   })
   .refine((v) => v.mode !== 'target' || (v.targetAmount ?? 0) > 0, {
     message: 'targetRequired',

@@ -96,7 +96,6 @@ export function CompareOffers({ country, amount: initialAmount, initialOffers }:
                   id={`${offer.id}-term`}
                   label={t.compare.term}
                   months={offer.termMonths}
-                  defaultUnit="months"
                   onChange={(months) => update(offer.id, { termMonths: months })}
                 />
                 <CurrencyInput

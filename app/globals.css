@@ -4,8 +4,7 @@
  * Design tokens. Components reference roles (bg-primary, text-muted-foreground),
  * never raw colours, so the palette changes here in one place.
  *
- * The site is dark by design, after the fintech dashboard reference: a matte
- * blue-black page, slate cards one step lighter, raised tiles inside them,
+ * The site is dark and monochrome by design: a matte neutral near-black page, slate cards one step lighter, raised tiles inside them,
  * white type with cool grey secondary text, coral for primary actions (with a
  * soft glow) and indigo as the secondary accent. White is reserved for the
  * active state of segmented controls.
@@ -14,25 +13,25 @@
 :root {
   color-scheme: dark;
 
-  --background: #16161e;   /* page — blue-black, matte */
-  --foreground: #f5f5f7;   /* primary text */
-  --card: #1f1f29;         /* panels and cards, one step above the page */
-  --card-foreground: #f5f5f7;
-  --muted: #282834;        /* raised tiles inside cards */
-  --muted-foreground: #8e8ea3;
-  --primary: #ff7a4f;      /* coral — primary actions */
-  --primary-foreground: #1a1210;
-  --secondary: #282834;
-  --secondary-foreground: #f5f5f7;
-  --accent: #2b2b38;       /* hover fill */
+  --background: #121212;   /* page — neutral near-black, matte */
+  --foreground: #f5f5f5;   /* primary text */
+  --card: #1b1b1b;         /* panels and cards, one step above the page */
+  --card-foreground: #f5f5f5;
+  --muted: #242424;        /* raised tiles inside cards */
+  --muted-foreground: #9a9a9a;
+  --primary: #f5f5f5;      /* white — primary actions, the logo's colour */
+  --primary-foreground: #111111;
+  --secondary: #242424;
+  --secondary-foreground: #f5f5f5;
+  --accent: #2a2a2a;       /* hover fill */
   --accent-foreground: #ffffff;
   --indigo: #5b5bd6;       /* secondary accent: highlights, balance tiles */
   --success: #3fb067;
   --destructive: #e8615a;
   --destructive-foreground: #ffffff;
-  --border: #2b2b38;
-  --input: #33333f;
-  --ring: #ff7a4f;
+  --border: #2a2a2a;
+  --input: #303030;
+  --ring: #f5f5f5;
   --radius: 0.875rem;
   /* Faint film grain that keeps large dark areas matte. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");

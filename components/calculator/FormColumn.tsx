@@ -15,11 +15,17 @@ import { cn } from '@/lib/utils/cn'
 export function FormColumn({
   scrollable,
   peek,
+  fit = false,
   children,
 }: {
   scrollable: boolean
   /** With `scrollable`: size the box to show exactly this many fields, the rest scroll. */
   peek?: number
+  /**
+   * With `scrollable`: the box takes the height the other columns give the row
+   * instead of setting it, so a long form never stretches them with empty space.
+   */
+  fit?: boolean
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -74,9 +80,9 @@ export function FormColumn({
       ref={ref}
       className="relative h-full"
       // Desktop only: on phones the form simply grows in the page.
-      style={keepHeight ? ({ '--keep-height': `${keepHeight}px` } as React.CSSProperties) : undefined}
+      style={keepHeight && !fit ? ({ '--keep-height': `${keepHeight}px` } as React.CSSProperties) : undefined}
     >
-      <div className="lg:min-h-[var(--keep-height)]" aria-hidden />
+      {!fit && <div className="lg:min-h-[var(--keep-height)]" aria-hidden />}
       <div
         data-form-scroller
         className={cn(

@@ -27,6 +27,8 @@ export interface CalculatorLayoutProps {
   scrollableForm?: boolean
   /** With `scrollableForm`: show exactly this many fields, the rest scroll inside the box. */
   formPeek?: number
+  /** With `scrollableForm`: the form takes the height of the results and offers, and scrolls. */
+  formFit?: boolean
   /**
    * False until the user has filled in the required fields: the results, the
    * explanation and everything below make way for a prompt to enter the numbers.
@@ -56,6 +58,7 @@ export function CalculatorLayout({
   className,
   scrollableForm = false,
   formPeek,
+  formFit = false,
   ready = true,
 }: CalculatorLayoutProps) {
   const detailBlock = ready && detail && <Reveal className="space-y-8">{detail}</Reveal>
@@ -124,7 +127,7 @@ export function CalculatorLayout({
           className="order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-1 xl:row-span-1 [&>*]:h-full"
         >
           {/* Scrollable when asked (long forms), keeping the height it had before. */}
-          <FormColumn scrollable={scrollableForm} peek={formPeek}>{form}</FormColumn>
+          <FormColumn scrollable={scrollableForm} peek={formPeek} fit={formFit}>{form}</FormColumn>
         </Reveal>
 
         {!ready && (

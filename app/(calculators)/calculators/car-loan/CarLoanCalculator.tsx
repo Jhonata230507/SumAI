@@ -6,13 +6,13 @@ import { getBenchmarks } from '@/lib/countries'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
-import { AmortizationChart } from '@/components/charts/lazy'
-import { PaymentBreakdown } from '@/components/charts/PaymentBreakdown'
+import { AmortizationChart, CarValueChart } from '@/components/charts/lazy'
 import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { PercentageInput } from '@/components/common/PercentageInput'
 import { RateInput } from '@/components/common/RateInput'
-import { Card, CardContent } from '@/components/ui/card'
+import { CHART_PANEL } from '@/components/charts/theme'
+import { cn } from '@/lib/utils/cn'
 import { TermInput } from '@/components/common/TermInput'
 import { calculateCarLoan } from '@/features/calculators/car-loan/calculation'
 import { carLoanSchema, type CarLoanSchema } from '@/features/calculators/car-loan/schema'
@@ -173,12 +173,10 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
                 fallbackNote={t.loan.averageRateNote(`${formatPercent(averageRate, country.locale)} ${rateBasis}`)}
               />
 
-              {/* Car loans are usually quoted in months, so the field opens in months. */}
               <TermInput
                 id="term"
                 label={country.terminology.loanTerm}
                 months={input.termMonths}
-                defaultUnit="months"
                 max={120}
                 onChange={(months) => set('termMonths', months)}
               />
@@ -228,32 +226,31 @@ export function CarLoanCalculator({ country, initial, header, related }: CarLoan
             />
           )}
 
-          <Card>
-            <CardContent className="space-y-4 p-5">
-              <PaymentBreakdown
-                currency={result.currency}
-                segments={[
-                  { key: 'price', label: t.carLoan.segments.vehicle, value: committed.vehiclePrice },
-                  { key: 'tax', label: t.carLoan.segments.salesTax, value: result.salesTax },
-                  { key: 'fees', label: t.carLoan.segments.fees, value: committed.feesAndRegistration },
-                  { key: 'interest', label: t.carLoan.segments.interest, value: result.totalInterest },
-                ]}
-              />
+          {/* Last in the column: it takes the height left beside the form, and the plot grows into it. */}
+          <div className={cn(CHART_PANEL, 'flex flex-col gap-4')}>
+            <CarValueChart
+              className="flex-1"
+              vehiclePrice={committed.vehiclePrice}
+              amountFinanced={result.amountFinanced}
+              rows={result.schedule.rows}
+              breakEvenPeriod={result.breakEvenPeriod}
+              currency={result.currency}
+              locale={country.locale}
+            />
 
-              {result.tradeInEquity < 0 && (
-                <p className="rounded-md bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-                  {t.carLoan.negativeEquity(formatCurrency(-result.tradeInEquity, result.currency))}
-                </p>
-              )}
+            {result.tradeInEquity < 0 && (
+              <p className="rounded-md bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                {t.carLoan.negativeEquity(formatCurrency(-result.tradeInEquity, result.currency))}
+              </p>
+            )}
 
-              {underwater && (
-                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                  {t.carLoan.underwater}
-                  {result.breakEvenPeriod ? t.carLoan.catchUp(result.breakEvenPeriod) : t.carLoan.noCatchUp}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+            {underwater && (
+              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                {t.carLoan.underwater}
+                {result.breakEvenPeriod ? t.carLoan.catchUp(result.breakEvenPeriod) : t.carLoan.noCatchUp}
+              </p>
+            )}
+          </div>
         </>
       }
       // Recommended credits beside the numbers; the AI explanation is set aside for now.
