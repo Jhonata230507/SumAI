@@ -5,7 +5,6 @@ import { getCalculator } from '@/data/calculators/definitions'
 import { getRequestContext } from '@/lib/i18n/server'
 import { defaultAmountScale, getBenchmarks } from '@/lib/countries'
 import { mortgageDefaults } from '@/features/calculators/mortgage/schema'
-import { estimateHomeInsurance, estimatePropertyTax, estimateRate } from '@/features/calculators/mortgage/us'
 import { MortgageCalculator } from './MortgageCalculator'
 
 const calculator = getCalculator('mortgage')
@@ -38,27 +37,8 @@ export default async function MortgageCalculatorPage() {
     countryCode: country.code,
   }
 
-  // US: the full purchase picture — ZIP, income and debts, loan type — with the
-  // rate, property tax and insurance starting as labelled estimates.
-  const initial =
-    country.code === 'us'
-      ? {
-          ...base,
-          loanType: 'conventional' as const,
-          creditBand: null,
-          zip: '',
-          annualIncome: 120_000,
-          monthlyDebts: 500,
-          annualRate: estimateRate({
-            benchmarks,
-            termMonths: base.termMonths,
-            loanType: 'conventional',
-            creditBand: null,
-          }),
-          propertyTaxAnnual: estimatePropertyTax(homePrice, '').annual,
-          homeInsuranceAnnual: estimateHomeInsurance(homePrice),
-        }
-      : base
+  // The US uses the config-driven estimator, which starts empty and ignores this.
+  const initial = base
 
   return (
     <MortgageCalculator

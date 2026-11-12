@@ -12,17 +12,8 @@ import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { RateInput } from '@/components/common/RateInput'
 import { TermInput } from '@/components/common/TermInput'
-import { DebtToIncome } from '@/components/calculator/DebtToIncome'
-import { PaymentBreakdown } from '@/components/charts/PaymentBreakdown'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  bandToScore,
-  estimateHomeInsurance,
-  estimatePropertyTax,
-  estimateRate,
-} from '@/features/calculators/mortgage/us'
-import { UsMortgageFields, type Touched } from './UsMortgageFields'
-import { formatCurrency } from '@/lib/utils/format-currency'
+import { getMortgageConfig } from '@/features/calculators/mortgage/estimator/config'
+import { MortgageEstimator } from './MortgageEstimator'
 import { calculateMortgage } from '@/features/calculators/mortgage/calculation'
 import { mortgageSchema, type MortgageSchema } from '@/features/calculators/mortgage/schema'
 import { buildMortgageScenarios } from '@/features/calculators/mortgage/scenarios'
@@ -41,73 +32,37 @@ export interface MortgageCalculatorProps {
 }
 
 /** Fields the calculator opens with empty (NaN): the user types their own numbers. */
-/** Empty fields the user fills in. US: the purchase and household numbers; the rate stays an estimate. */
-const START_US = {
-  homePrice: Number.NaN,
-  downPayment: Number.NaN,
-  annualIncome: Number.NaN,
-  monthlyDebts: Number.NaN,
-  termMonths: Number.NaN,
-  propertyTaxAnnual: 0,
-  homeInsuranceAnnual: 0,
-}
 const START = { homePrice: Number.NaN, downPayment: Number.NaN, annualRate: Number.NaN, termMonths: Number.NaN }
 
 /** Colombia: the rate may be left empty; the average mortgage rate is used then. */
 const CO_FALLBACK = { annualRate: getBenchmarks('co').mortgage30Year }
 
-export function MortgageCalculator({ country, initial, header, related }: MortgageCalculatorProps) {
+/**
+ * Countries with an estimator config (the US for now) get the config-driven
+ * estimator; the others keep the classic calculator below.
+ */
+export function MortgageCalculator(props: MortgageCalculatorProps) {
+  const config = getMortgageConfig(props.country.code)
+  return config ? (
+    <MortgageEstimator country={props.country} config={config} header={props.header} related={props.related} />
+  ) : (
+    <ClassicMortgageCalculator {...props} />
+  )
+}
+
+function ClassicMortgageCalculator({ country, initial, header, related }: MortgageCalculatorProps) {
   const { t } = useI18n()
   const { input, committed, errors, result, set, ready, update, reset, formError } = useCalculator(
     mortgageSchema,
     calculateMortgage,
     initial,
-    { start: country.code === 'us' ? START_US : START, fallback: country.code === 'co' ? CO_FALLBACK : undefined },
+    { start: START, fallback: country.code === 'co' ? CO_FALLBACK : undefined },
   )
 
   // "What if" options: one at a time, compared against the numbers they replace.
   const whatIfState = useWhatIf(committed, buildMortgageScenarios, update)
   const { scenarios } = whatIfState
   const baseResult = useMemo(() => calculateMortgage(whatIfState.base), [whatIfState.base])
-
-  // US: the rate, property tax and insurance follow their estimates (market
-  // average by loan type and credit; the ZIP's state; the price) until the user
-  // types over them.
-  const isUs = country.code === 'us'
-  const untouched: Touched = { rate: false, tax: false, insurance: false }
-  const [touched, setTouched] = useState<Touched>(untouched)
-  const [estimatesOpen, setEstimatesOpen] = useState(false)
-  const withEstimates = (next: MortgageSchema, marks: Touched): MortgageSchema => {
-    if (!isUs) return next
-    return {
-      ...next,
-      annualRate: marks.rate
-        ? next.annualRate
-        : estimateRate({
-            benchmarks: getBenchmarks(country.code),
-            termMonths: next.termMonths,
-            loanType: next.loanType ?? 'conventional',
-            creditBand: next.creditBand ?? null,
-          }),
-      propertyTaxAnnual: marks.tax
-        ? next.propertyTaxAnnual
-        : estimatePropertyTax(next.homePrice, next.zip ?? '').annual,
-      homeInsuranceAnnual: marks.insurance ? next.homeInsuranceAnnual : estimateHomeInsurance(next.homePrice),
-    }
-  }
-  const change = <K extends keyof MortgageSchema>(key: K, value: MortgageSchema[K]) => {
-    const marks = {
-      rate: touched.rate || key === 'annualRate',
-      tax: touched.tax || key === 'propertyTaxAnnual',
-      insurance: touched.insurance || key === 'homeInsuranceAnnual',
-    }
-    setTouched(marks)
-    update(withEstimates({ ...input, [key]: value }, marks))
-  }
-  const restart = () => {
-    setTouched(untouched)
-    reset()
-  }
 
   // Colombia: the four local amortization systems. The selected one drives both
   // the systems card and the yearly chart, so the two always show the same loan.
@@ -145,20 +100,13 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
       value: result.monthly.total,
       format: 'currency',
       emphasis: 'primary',
-      detail: isUs ? t.mortgage.us.totalDetail : t.mortgage.totalMonthlyDetail,
+      detail: t.mortgage.totalMonthlyDetail,
     },
     {
       key: 'loanAmount',
       label: t.mortgage.borrowed,
       value: result.loanAmount,
       format: 'currency',
-      detail:
-        result.upfrontFee > 0 && committed.loanType
-          ? t.mortgage.us.upfrontIncluded(
-              formatCurrency(result.upfrontFee, result.currency),
-              t.mortgage.us.fees[committed.loanType],
-            )
-          : undefined,
     },
     { key: 'totalInterest', label: t.mortgage.totalInterest, value: result.totalInterest, format: 'currency' },
     {
@@ -171,16 +119,9 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
   ]
 
   const miYears = result.mortgageInsuranceEndsPeriod ? Math.ceil(result.mortgageInsuranceEndsPeriod / 12) : null
-  // How long mortgage insurance lasts depends on the US loan type.
-  const miNotice = !result.requiresMortgageInsurance
-    ? null
-    : result.insuranceDuration?.kind === 'life'
-      ? committed.loanType === 'usda'
-        ? t.mortgage.us.usdaLife
-        : t.mortgage.us.fhaLife
-      : result.insuranceDuration?.kind === 'months'
-        ? t.mortgage.us.fhaYears
-        : t.mortgage.miNotice(formatPercent(isUs ? 0.2 : country.rules.minDownPaymentRatio, country.locale, 0), miYears)
+  const miNotice = result.requiresMortgageInsurance
+    ? t.mortgage.miNotice(formatPercent(country.rules.minDownPaymentRatio, country.locale, 0), miYears)
+    : null
 
   const whatIf = (
     <WhatIfPanel
@@ -195,102 +136,79 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
         periodsDelta: scenario.result.payoffPeriods - baseResult.payoffPeriods,
       }))}
       selectedId={whatIfState.selectedId}
-      onApply={(id) => {
-        const scenario = scenarios.find((s) => s.id === id)
-        // A scenario that sets the rate makes it the user's, so estimates stop moving it.
-        if (scenario && id !== whatIfState.selectedId && scenario.input.annualRate !== whatIfState.base.annualRate)
-          setTouched({ ...touched, rate: true })
-        whatIfState.toggle(id)
-      }}
+      onApply={whatIfState.toggle}
     />
   )
 
   return (
     <CalculatorLayout
       ready={ready}
-      // US: with the optional fields open the form is long; it scrolls instead of stretching the results.
-      scrollableForm={isUs && estimatesOpen}
       header={header}
       related={related}
       form={
-        <CalculatorForm onReset={restart} error={formError}>
-          {isUs ? (
-            <>
-              <UsMortgageFields
-                country={country}
-                input={input}
-                errors={errors}
-                touched={touched}
-                minDownRatio={result.minDownRatio}
-                onChange={change}
-                open={estimatesOpen}
-                onToggle={setEstimatesOpen}
-              />
-            </>
-          ) : (
-            <>
-              <CurrencyInput
-                id="price"
-                label={t.mortgage.homePrice}
-                currency={country.currency}
-                value={input.homePrice}
-                error={errors.homePrice}
-                onChange={(v) => set('homePrice', v)}
-              />
+        <CalculatorForm onReset={reset} error={formError}>
+          <>
+            <CurrencyInput
+              id="price"
+              label={t.mortgage.homePrice}
+              currency={country.currency}
+              value={input.homePrice}
+              error={errors.homePrice}
+              onChange={(v) => set('homePrice', v)}
+            />
 
-              <CurrencyInput
-                id="down"
-                label={country.terminology.downPayment}
-                currency={country.currency}
-                value={input.downPayment}
-                error={errors.downPayment}
-                hint={
-                  // Only once both numbers are in.
-                  Number.isFinite(input.downPayment / input.homePrice)
-                    ? t.mortgage.ofPrice(
-                        formatPercent(input.downPayment / Math.max(input.homePrice, 1), country.locale, 1),
-                      )
-                    : undefined
-                }
-                onChange={(v) => set('downPayment', v)}
-              />
+            <CurrencyInput
+              id="down"
+              label={country.terminology.downPayment}
+              currency={country.currency}
+              value={input.downPayment}
+              error={errors.downPayment}
+              note={
+                // Only once both numbers are in.
+                Number.isFinite(input.downPayment / input.homePrice)
+                  ? t.mortgage.ofPrice(
+                      formatPercent(input.downPayment / Math.max(input.homePrice, 1), country.locale, 1),
+                    )
+                  : undefined
+              }
+              onChange={(v) => set('downPayment', v)}
+            />
 
-              <RateInput
-                id="rate"
-                country={country}
-                value={input.annualRate}
-                error={errors.annualRate}
-                onChange={(v) => set('annualRate', v)}
-                {...(country.code === 'co' && {
-                  optional: true,
-                  fallback: CO_FALLBACK.annualRate,
-                  fallbackNote: t.loan.averageRateNote(
-                    `${formatPercent(CO_FALLBACK.annualRate, country.locale)} ${t.rateInput.effectiveAnnual}`,
-                  ),
-                })}
-              />
+            <RateInput
+              id="rate"
+              country={country}
+              value={input.annualRate}
+              error={errors.annualRate}
+              onChange={(v) => set('annualRate', v)}
+              {...(country.code === 'co' && {
+                optional: true,
+                fallback: CO_FALLBACK.annualRate,
+                fallbackNote: t.loan.averageRateNote(
+                  `${formatPercent(CO_FALLBACK.annualRate, country.locale)} ${t.rateInput.effectiveAnnual}`,
+                ),
+              })}
+            />
 
-              <TermInput
-                id="term"
-                label={country.terminology.loanTerm}
-                months={input.termMonths}
-                onChange={(months) => set('termMonths', months)}
-              />
+            <TermInput
+              id="term"
+              label={country.terminology.loanTerm}
+              months={input.termMonths}
+              onChange={(months) => set('termMonths', months)}
+            />
 
-              {/* Property tax, home insurance and HOA/administración fields are hidden for
-              now; the page starts them at 0 so no cost the user cannot see or edit is
-              added to the payment. */}
+            {/* Property tax, home insurance and HOA/administración fields are hidden for
+            now; the page starts them at 0 so no cost the user cannot see or edit is
+            added to the payment. */}
 
-              <CurrencyInput
-                id="extra"
-                optional
-                label={t.mortgage.extra}
-                currency={country.currency}
-                value={input.extraPayment}
-                onChange={(v) => set('extraPayment', v)}
-              />
-            </>
-          )}
+            <CurrencyInput
+              id="extra"
+              optional
+              label={t.mortgage.extra}
+              currency={country.currency}
+              value={input.extraPayment}
+              onChange={(v) => set('extraPayment', v)}
+            />
+          </>
         </CalculatorForm>
       }
       results={
@@ -324,32 +242,6 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
             }
           />
 
-          {/* US: how lenders would size the loan, and what the monthly bill is made of. */}
-          {isUs && <DebtToIncome value={result.debtToIncome} locale={country.locale} />}
-          {isUs && (
-            <Card>
-              <CardContent className="p-5">
-                <PaymentBreakdown
-                  currency={result.currency}
-                  segments={[
-                    {
-                      key: 'pi',
-                      label: t.mortgage.segments.principalAndInterest,
-                      value: result.monthly.principalAndInterest,
-                    },
-                    { key: 'tax', label: t.mortgage.segments.propertyTax, value: result.monthly.propertyTax },
-                    { key: 'insurance', label: t.mortgage.segments.homeInsurance, value: result.monthly.insurance },
-                    {
-                      key: 'mi',
-                      label: t.mortgage.segments.mortgageInsurance,
-                      value: result.monthly.mortgageInsurance,
-                    },
-                    { key: 'hoa', label: t.mortgage.segments.hoa, value: result.monthly.hoa },
-                  ]}
-                />
-              </CardContent>
-            </Card>
-          )}
         </>
       }
       // Recommended credits beside the numbers; the AI explanation is set aside for now.
@@ -360,9 +252,6 @@ export function MortgageCalculator({ country, initial, header, related }: Mortga
           country={country}
           amount={result.loanAmount}
           termMonths={committed.termMonths}
-          creditScore={committed.creditBand ? bandToScore(committed.creditBand) : undefined}
-          monthlyIncome={committed.annualIncome ? committed.annualIncome / 12 : undefined}
-          monthlyDebts={committed.annualIncome ? (committed.monthlyDebts ?? 0) : undefined}
         />
       }
       explanation={

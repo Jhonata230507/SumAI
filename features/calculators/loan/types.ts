@@ -10,6 +10,8 @@ export interface LoanInput {
   frequency: Frequency
   extraPayment: number
   originationFee: number
+  /** The fee as a share of the amount; when above zero it is used instead of `originationFee`. */
+  originationFeeRate?: number
   countryCode: CountryCode
 }
 

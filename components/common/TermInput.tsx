@@ -22,6 +22,8 @@ export interface TermInputProps {
   className?: string
   /** Clearing reports NaN (empty); see CurrencyInput. */
   allowEmpty?: boolean
+  /** Shown in the empty field, e.g. an example term. */
+  placeholder?: string
 }
 
 /**
@@ -41,6 +43,7 @@ export function TermInput({
   defaultUnit = 'years',
   className,
   allowEmpty = true,
+  placeholder,
 }: TermInputProps) {
   const { t, locale } = useI18n()
   const [unit, setUnit] = React.useState<Unit>(defaultUnit)
@@ -100,6 +103,7 @@ export function TermInput({
           min={min / perUnit}
           max={max / perUnit}
           value={display}
+          placeholder={placeholder}
           className="pr-16 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           onChange={(event) => {
             setDraft(event.target.value)

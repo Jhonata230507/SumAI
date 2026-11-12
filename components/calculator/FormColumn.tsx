@@ -16,6 +16,7 @@ export function FormColumn({
   scrollable,
   peek,
   fit = false,
+  sticky = false,
   children,
 }: {
   scrollable: boolean
@@ -26,6 +27,8 @@ export function FormColumn({
    * instead of setting it, so a long form never stretches them with empty space.
    */
   fit?: boolean
+  /** Keep its own height and stay in view while the rest of its grid row scrolls past. */
+  sticky?: boolean
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -67,30 +70,31 @@ export function FormColumn({
     return () => observer.disconnect()
   }, [scrollable, peek])
 
-  if (!scrollable) {
-    return (
-      <div ref={ref} className="h-full [&>*]:h-full">
-        {children}
-      </div>
-    )
-  }
-
+  // One element tree in both modes, only the classes change: switching modes
+  // (e.g. when the first result appears) must not remount the form, or the field
+  // being typed in loses focus and the keystrokes after the first.
+  const keep = scrollable && !fit && keepHeight
   return (
     <div
       ref={ref}
-      className="relative h-full"
+      className={cn(sticky ? 'lg:sticky lg:top-24' : 'h-full', scrollable && 'relative')}
       // Desktop only: on phones the form simply grows in the page.
-      style={keepHeight && !fit ? ({ '--keep-height': `${keepHeight}px` } as React.CSSProperties) : undefined}
+      style={keep ? ({ '--keep-height': `${keepHeight}px` } as React.CSSProperties) : undefined}
     >
-      {!fit && <div className="lg:min-h-[var(--keep-height)]" aria-hidden />}
+      <div className={cn(scrollable && !fit ? 'lg:min-h-[var(--keep-height)]' : 'hidden')} aria-hidden />
       <div
-        data-form-scroller
+        data-form-scroller={scrollable ? '' : undefined}
         className={cn(
-          'lg:absolute lg:inset-0 lg:overflow-y-auto lg:rounded-2xl [&>*]:min-h-full',
-          'lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(255,255,255,0.15)_transparent]',
-          'lg:[&_[data-form-actions]]:sticky lg:[&_[data-form-actions]]:bottom-0 lg:[&_[data-form-actions]]:z-10',
-          'lg:[&_[data-form-actions]]:-mx-6 lg:[&_[data-form-actions]]:-mb-6 lg:[&_[data-form-actions]]:px-6 lg:[&_[data-form-actions]]:pb-6',
-          'lg:[&_[data-form-actions]]:bg-card lg:[&_[data-form-actions]]:shadow-[0_-12px_20px_-12px_rgba(0,0,0,0.6)]',
+          'h-full',
+          scrollable
+            ? [
+                'lg:absolute lg:inset-0 lg:overflow-y-auto lg:rounded-2xl [&>*]:min-h-full',
+                'lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(255,255,255,0.15)_transparent]',
+                'lg:[&_[data-form-actions]]:sticky lg:[&_[data-form-actions]]:bottom-0 lg:[&_[data-form-actions]]:z-10',
+                'lg:[&_[data-form-actions]]:-mx-6 lg:[&_[data-form-actions]]:-mb-6 lg:[&_[data-form-actions]]:px-6 lg:[&_[data-form-actions]]:pb-6',
+                'lg:[&_[data-form-actions]]:bg-card lg:[&_[data-form-actions]]:shadow-[0_-12px_20px_-12px_rgba(0,0,0,0.6)]',
+              ]
+            : '[&>*]:h-full',
         )}
       >
         {children}

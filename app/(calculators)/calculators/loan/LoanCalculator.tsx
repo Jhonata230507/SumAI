@@ -7,7 +7,10 @@ import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
 import { WhatIfPanel } from '@/components/calculator/WhatIfPanel'
-import { AmortizationChart } from '@/components/charts/lazy'
+import { AmortizationChart, PayoffPlanner } from '@/components/charts/lazy'
+import { PaymentBreakdown } from '@/components/charts/PaymentBreakdown'
+import { CHART_PANEL } from '@/components/charts/theme'
+import { cn } from '@/lib/utils/cn'
 import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { RateInput } from '@/components/common/RateInput'
@@ -72,7 +75,8 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
   const { scenarios } = whatIfState
   const baseResult = useMemo(() => calculateLoan(whatIfState.base), [whatIfState.base])
 
-  const whatIfs = scenarios.map((scenario) => {
+  // US: the payoff planner below covers paying extra, with a slider; the option would repeat it.
+  const whatIfs = scenarios.filter((scenario) => !(isUs && scenario.id === 'extra-payment')).map((scenario) => {
     const delta = scenarioSavings(baseResult, scenario.result)
     return {
       id: scenario.id,
@@ -146,11 +150,9 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
   return (
     <CalculatorLayout
       ready={ready}
-      // US: with the optional fields open the form is long; it scrolls instead of stretching the results.
+      // US: the form box keeps the height it opens with. Results appearing never resize
+      // it, and fields that would make it taller (the estimates) scroll inside it.
       scrollableForm={isUs && (estimatesOpen || ready)}
-      // US, with results: the form takes the height of the results and offers and
-      // scrolls, so neither column stretches to a long form with empty space.
-      formFit={isUs && ready}
       header={header}
       related={related}
       form={
@@ -164,6 +166,7 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
               open={estimatesOpen}
               onToggle={setEstimatesOpen}
               onChange={set}
+              onPatch={(patch) => update({ ...input, ...patch })}
             />
           ) : (
             <>
@@ -240,7 +243,26 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
           ) : (
             <ResultSummary figures={figures} currency={result.currency} locale={country.locale} />
           )}
-          {debtToIncome && <DebtToIncome value={debtToIncome} locale={country.locale} frontLabel={t.loan.dtiLoan} />}
+          {/* US: always on view; without an income it asks for one. */}
+          {/* US: debt-to-income and what the loan costs in total, side by side; last in the
+              column, the pair takes the height left beside the form. */}
+          {isUs && (
+            <div className="grid gap-6 sm:grid-cols-2">
+              <DebtToIncome value={debtToIncome} locale={country.locale} frontLabel={t.loan.dtiLoan} />
+              <div className={cn(CHART_PANEL, 'flex flex-col')}>
+                <PaymentBreakdown
+                  className="flex-1"
+                  caption={t.loan.costCaption}
+                  currency={result.currency}
+                  segments={[
+                    { key: 'borrowed', label: t.loan.costBorrowed, value: committed.amount },
+                    { key: 'interest', label: t.charts.interest, value: result.totalInterest },
+                    { key: 'fee', label: t.loan.fee, value: result.totalFees },
+                  ]}
+                />
+              </div>
+            </div>
+          )}
           {!isUs && whatIfPanel}
         </>
       }
@@ -283,11 +305,16 @@ export function LoanCalculator({ country, initial, header, related }: LoanCalcul
         <>
           {/* US: full width under the three columns, so the form, results and offers end level. */}
           {isUs && whatIfPanel}
-          <AmortizationChart
-            rows={result.schedule.rows}
-            currency={result.currency}
-            periodsPerYear={FREQUENCY_PER_YEAR[committed.frequency]}
-          />
+          {/* US: what paying a little extra does, with the schedule underneath. */}
+          {isUs ? (
+            <PayoffPlanner input={committed} payment={result.payment} currency={result.currency} locale={country.locale} />
+          ) : (
+            <AmortizationChart
+              rows={result.schedule.rows}
+              currency={result.currency}
+              periodsPerYear={FREQUENCY_PER_YEAR[committed.frequency]}
+            />
+          )}
         </>
       }
     />

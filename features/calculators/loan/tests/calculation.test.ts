@@ -47,4 +47,14 @@ describe('calculateLoan', () => {
     expect(withFee.payment).toBe(without.payment)
     expect(withFee.totalPaid).toBeCloseTo(without.totalPaid + 500, 2)
   })
+
+  it('takes the fee as a share of the amount when a fee rate is given', () => {
+    const result = calculateLoan({ ...base, originationFee: 500, originationFeeRate: 0.05 })
+    expect(result.totalFees).toBeCloseTo(base.amount * 0.05, 2)
+  })
+
+  it('uses the fee amount when the fee rate is zero', () => {
+    const result = calculateLoan({ ...base, originationFee: 500, originationFeeRate: 0 })
+    expect(result.totalFees).toBe(500)
+  })
 })

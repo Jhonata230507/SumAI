@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils/cn'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { OptionalTag } from './OptionalTag'
+import { InfoTip } from './InfoTip'
 
 export interface CurrencyInputProps {
   id: string
@@ -14,7 +15,10 @@ export interface CurrencyInputProps {
   value: number
   onChange: (value: number) => void
   currency?: CurrencyCode
+  /** What the field means, behind an info icon beside the label. */
   hint?: string
+  /** A live value under the input, e.g. "= 20% of the price". Descriptions go in `hint`. */
+  note?: string
   error?: string
   min?: number
   max?: number
@@ -27,6 +31,10 @@ export interface CurrencyInputProps {
   allowEmpty?: boolean
   /** Shows a quiet "Optional" at the right of the label. */
   optional?: boolean
+  /** Shown in the empty field, e.g. an example amount. */
+  placeholder?: string
+  /** Shown at the right of the label row, e.g. a unit switch. */
+  adornment?: React.ReactNode
   className?: string
 }
 
@@ -43,6 +51,7 @@ export function CurrencyInput({
   onChange,
   currency = 'USD',
   hint,
+  note,
   error,
   min = 0,
   max,
@@ -50,6 +59,8 @@ export function CurrencyInput({
   className,
   allowEmpty = true,
   optional = false,
+  placeholder,
+  adornment,
 }: CurrencyInputProps) {
   const [focused, setFocused] = React.useState(false)
   const [draft, setDraft] = React.useState('')
@@ -91,8 +102,16 @@ export function CurrencyInput({
     // taller one, and the inputs stay level even if one label wraps.
     <div className={cn('flex flex-col gap-1.5', className)}>
       <div className="flex flex-1 items-end justify-between gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        {optional && <OptionalTag />}
+        <div className="flex items-end gap-1.5">
+          <Label htmlFor={id}>{label}</Label>
+          {hint && <InfoTip content={hint} id={`${id}-hint`} />}
+        </div>
+        {(optional || adornment) && (
+          <div className="flex items-center gap-2">
+            {optional && <OptionalTag />}
+            {adornment}
+          </div>
+        )}
       </div>
 
       <div className="relative">
@@ -105,8 +124,9 @@ export function CurrencyInput({
           inputMode="decimal"
           value={display}
           disabled={disabled}
+          placeholder={placeholder}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
+          aria-describedby={[error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ') || undefined}
           className={cn('pl-7 tabular-nums', error && 'border-destructive')}
           onFocus={() => {
             setDraft(blank ? '' : formatAmountInput(String(value).replace('.', decimal), currency))
@@ -129,10 +149,8 @@ export function CurrencyInput({
         <p id={`${id}-error`} className="text-xs text-destructive">
           {error}
         </p>
-      ) : hint ? (
-        <p id={`${id}-hint`} className="text-xs text-muted-foreground">
-          {hint}
-        </p>
+      ) : note ? (
+        <p className="text-xs text-muted-foreground">{note}</p>
       ) : null}
     </div>
   )

@@ -22,6 +22,8 @@ export interface AmortizationChartProps {
   currency: CurrencyCode
   periodsPerYear?: number
   height?: number
+  /** Calendar year of the first payment: yearly bars are labelled 2026, 2027… instead of Yr 1, Yr 2. */
+  startYear?: number
 }
 
 /**
@@ -39,6 +41,7 @@ export function AmortizationChart({
   currency,
   periodsPerYear = 12,
   height = 280,
+  startYear,
 }: AmortizationChartProps) {
   const { t } = useI18n()
   const colors = seriesColors('dark')
@@ -51,6 +54,8 @@ export function AmortizationChart({
     : toYearlyBuckets(rows, periodsPerYear).map(({ year, principal, interest }) => ({ x: year, principal, interest }))
   const unitShort = monthly ? t.charts.monthShort : t.charts.yearShort
   const unit = monthly ? t.charts.month : t.charts.year
+  const calendar = !monthly && startYear !== undefined
+  const yearLabel = (x: number) => (calendar ? String(startYear + x - 1) : null)
   // Many bars get thinner bars and sparser labels.
   const dense = data.length > 15
 
@@ -77,7 +82,7 @@ export function AmortizationChart({
             {...AXIS_PROPS}
             interval={dense ? 'preserveStartEnd' : 0}
             minTickGap={12}
-            tickFormatter={(x: number) => `${unitShort} ${x}`}
+            tickFormatter={(x: number) => yearLabel(x) ?? `${unitShort} ${x}`}
           />
           <YAxis
             {...AXIS_PROPS}
@@ -90,7 +95,7 @@ export function AmortizationChart({
             contentStyle={TOOLTIP_STYLE}
             itemStyle={{ color: TOOLTIP_STYLE.color }}
             formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
-            labelFormatter={(x) => `${unit} ${x}`}
+            labelFormatter={(x) => yearLabel(Number(x)) ?? `${unit} ${x}`}
           />
           <Bar
             dataKey="principal"

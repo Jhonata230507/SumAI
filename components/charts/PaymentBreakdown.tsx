@@ -15,6 +15,8 @@ export interface BreakdownSegment {
 export interface PaymentBreakdownProps {
   segments: BreakdownSegment[]
   currency: CurrencyCode
+  /** The title; defaults to what makes up the payment. */
+  caption?: string
   className?: string
 }
 
@@ -28,7 +30,7 @@ export interface PaymentBreakdownProps {
  * and every column is labelled with its name, amount and share, so identity
  * never rests on colour alone.
  */
-export function PaymentBreakdown({ segments, currency, className }: PaymentBreakdownProps) {
+export function PaymentBreakdown({ segments, currency, caption, className }: PaymentBreakdownProps) {
   const { t } = useI18n()
   const colors = seriesColors('dark')
   const palette = [colors.primary, colors.secondary, colors.tertiary]
@@ -49,7 +51,7 @@ export function PaymentBreakdown({ segments, currency, className }: PaymentBreak
   return (
     <figure className={cn('flex flex-col gap-5', className)}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <figcaption className="text-sm font-medium">{t.charts.breakdownCaption}</figcaption>
+        <figcaption className="text-sm font-medium">{caption ?? t.charts.breakdownCaption}</figcaption>
         <p className="text-xs text-muted-foreground">
           {t.common.total}{' '}
           <span className="text-sm font-medium tabular-nums text-foreground">{formatCurrency(total, currency)}</span>

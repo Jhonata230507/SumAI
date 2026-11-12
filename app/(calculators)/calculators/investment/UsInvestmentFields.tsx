@@ -97,11 +97,14 @@ export function UsInvestmentFields({ country, input, errors, defaults, onChange 
       <PercentageInput
         id="return"
         label={u.expectedReturn}
-        hint={t.investment.expectedReturnHint}
+        hint={
+          empty(input.annualReturn)
+            ? `${t.investment.expectedReturnHint} ${u.returnNote(pct(defaults.annualReturn))}`
+            : t.investment.expectedReturnHint
+        }
         value={input.annualReturn}
         error={errors.annualReturn}
         placeholder={(defaults.annualReturn * 100).toFixed(2)}
-        note={empty(input.annualReturn) ? u.returnNote(pct(defaults.annualReturn)) : undefined}
         onChange={(v) => onChange('annualReturn', v)}
       />
 
@@ -109,10 +112,9 @@ export function UsInvestmentFields({ country, input, errors, defaults, onChange 
         id="fees"
         optional
         label={u.fees}
-        hint={t.investment.feesHint}
+        hint={empty(input.feeRate) ? `${t.investment.feesHint} ${u.feesNote}` : t.investment.feesHint}
         step={0.01}
         value={input.feeRate}
-        note={empty(input.feeRate) ? u.feesNote : undefined}
         onChange={(v) => onChange('feeRate', v)}
       />
 
@@ -122,7 +124,7 @@ export function UsInvestmentFields({ country, input, errors, defaults, onChange 
         label={u.inflation}
         value={input.inflationRate}
         placeholder={(defaults.inflationRate * 100).toFixed(2)}
-        note={empty(input.inflationRate) ? u.inflationNote(pct(defaults.inflationRate)) : undefined}
+        hint={empty(input.inflationRate) ? u.inflationNote(pct(defaults.inflationRate)) : undefined}
         onChange={(v) => onChange('inflationRate', v)}
       />
 
@@ -132,7 +134,7 @@ export function UsInvestmentFields({ country, input, errors, defaults, onChange 
         label={u.tax}
         value={input.taxRate ?? Number.NaN}
         placeholder={(defaults.taxRate * 100).toFixed(2)}
-        note={empty(input.taxRate) ? u.taxNote(pct(defaults.taxRate)) : undefined}
+        hint={empty(input.taxRate) ? u.taxNote(pct(defaults.taxRate)) : undefined}
         onChange={(v) => onChange('taxRate', v)}
       />
     </>

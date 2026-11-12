@@ -30,7 +30,8 @@ export function calculateLoan(input: LoanInput): LoanResult {
     extraPerPeriod: input.extraPayment,
   })
 
-  const totalFees = roundMoney(input.originationFee)
+  const feeRate = input.originationFeeRate ?? 0
+  const totalFees = roundMoney(feeRate > 0 ? input.amount * feeRate : input.originationFee)
   const totalPaid = roundMoney(schedule.totalPaid + totalFees)
 
   return {

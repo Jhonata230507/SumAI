@@ -63,3 +63,8 @@ export const CarValueChart = dynamic(() => import('./CarValueChart').then((m) =>
   ssr: false,
   loading: () => <ChartSkeleton height={300} />,
 })
+
+export const PayoffPlanner = dynamic(() => import('./PayoffPlanner').then((m) => m.PayoffPlanner), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={420} />,
+})

@@ -95,6 +95,57 @@ These are the rules most likely to cause a wrong number if they are broken.
 5. Add the route: `app/(calculators)/calculators/<id>/page.tsx` plus a client component that uses `useCalculator`.
 6. Update the `calculator_id` check constraint in a new migration.
 
+## Car loan estimator: adding a country or loan type
+
+The car loan page has two implementations. Countries with an estimator config
+(the US today) use the config-driven estimator; the rest use the classic
+calculator. `CarLoanCalculator.tsx` picks one with `getCarLoanConfig(country)`.
+
+```
+features/calculators/car-loan/estimator/
+  config.ts           CarLoanCountryConfig type and the country registry
+  countries/us.ts     the US config (estimated APRs and sales tax in one marked block)
+  calculate.ts        pure calculation: price mode, budget mode, DTI, chart rows
+  tests/              unit tests for every formula and edge case
+app/(calculators)/calculators/car-loan/CarLoanEstimator.tsx   the UI, config-driven
+```
+
+**Add a country** (e.g. `ca`):
+
+1. Create `countries/ca.ts` exporting a `CarLoanCountryConfig`: currency, locale,
+   the estimated APR table (by condition and credit band), the estimated sales
+   tax, credit band ranges, the term bounds (and the example shown while the
+   term is empty) and DTI thresholds.
+2. Register it in `CONFIGS` in `config.ts`.
+
+That is all: the calculation and the UI read everything from the config, and
+the page switches that country to the estimator. If the country quotes credit
+on a different scale, set the band ranges; the labels are built from them.
+Country-specific fields that do not exist yet (say, a provincial tax) need a
+config field, an input in `CarLoanEstimateInput` and the copy in both
+dictionaries.
+
+The **mortgage** follows the same pattern in
+`features/calculators/mortgage/estimator/` (`config.ts`, `countries/us.ts`,
+`calculate.ts`, `tests/`) with `MortgageEstimator.tsx` as its page. Its config also
+holds the loan programs (minimum down payment, upfront fee table, mortgage
+insurance rule, rate spread and DTI guidelines per program), the rate by term,
+the PMI tables, property tax by region and a postal-code-to-region lookup. The
+program fees in `countries/us.ts` are placeholders: verify them against current
+FHA, VA and USDA sources before launch.
+
+**Add a loan type** that works the same way (a price, a down payment, a
+monthly payment): copy the `estimator/` folder pattern for it, reuse
+`annuityFactor` from `calculate.ts`, and keep the rules:
+
+- No formulas in components. The UI collects inputs, calls the module and
+  formats what it returns.
+- Rates and tax are fractions (0.075 is 7.5%) everywhere in code.
+- Round only for display (`Intl.NumberFormat`), never inside the calculation.
+- Every default the user did not type is labelled as an estimate.
+- New copy goes in `lib/i18n/dictionaries/en.ts` and `es.ts` (`es` is typed
+  against `en`, so a missing key fails the type check).
+
 ## Known gaps
 
 - **Sign-in UI.** The middleware protects the app area and the Supabase clients are wired, but there is no sign-in page or auth callback route yet. "Sign in" buttons link to `/dashboard`, which redirects signed-out visitors.

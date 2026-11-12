@@ -61,7 +61,7 @@ export interface RateInputProps {
   allowEmpty?: boolean
   /**
    * The rate used when the field is left empty (effective annual, like `value`).
-   * The empty field shows it as a placeholder, with `fallbackNote` underneath.
+   * The empty field shows it as a placeholder, with `fallbackNote` in the field's tooltip.
    */
   fallback?: number
   fallbackNote?: string
@@ -107,7 +107,7 @@ export function RateInput({
         allowEmpty={allowEmpty}
         optional={optional}
         placeholder={fallback !== undefined ? (fallback * 100).toFixed(2) : undefined}
-        note={!Number.isFinite(value) && fallback !== undefined ? fallbackNote : undefined}
+        hint={!Number.isFinite(value) && fallback !== undefined ? fallbackNote : undefined}
       />
     )
   }
@@ -132,7 +132,9 @@ export function RateInput({
       key={basis}
       id={id}
       label={label ?? t.rateInput.label}
-      hint={compact ? `${basisHint} ${equivalent}.` : basisHint}
+      hint={[compact ? `${basisHint} ${equivalent}.` : basisHint, usingFallback ? fallbackNote : undefined]
+        .filter(Boolean)
+        .join(' ')}
       value={shown}
       // Monthly rates are small; three decimals keep them meaningful (1.281%).
       decimals={monthly ? 3 : 2}
@@ -142,7 +144,7 @@ export function RateInput({
       allowEmpty={allowEmpty}
       optional={optional}
       placeholder={placeholder}
-      note={usingFallback ? fallbackNote : compact || !equivalent ? undefined : equivalent}
+      note={usingFallback || compact || !equivalent ? undefined : equivalent}
       onChange={(typed) => onChange(monthly ? periodicToEffective(typed, 12) : typed)}
       adornment={
         <div

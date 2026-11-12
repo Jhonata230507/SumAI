@@ -98,7 +98,7 @@ export function UsSavingsFields({
         value={input.annualRate}
         error={errors.annualRate}
         placeholder={(defaultRate * 100).toFixed(2)}
-        note={Number.isFinite(input.annualRate) ? undefined : u.rateNote(pct(defaultRate))}
+        hint={Number.isFinite(input.annualRate) ? undefined : u.rateNote(pct(defaultRate))}
         onChange={(v) => onChange('annualRate', v)}
       />
 
@@ -134,7 +134,7 @@ export function UsSavingsFields({
         label={u.inflation}
         value={input.inflationRate ?? Number.NaN}
         placeholder={(defaultInflation * 100).toFixed(2)}
-        note={Number.isFinite(input.inflationRate ?? Number.NaN) ? undefined : u.inflationNote(pct(defaultInflation))}
+        hint={Number.isFinite(input.inflationRate ?? Number.NaN) ? undefined : u.inflationNote(pct(defaultInflation))}
         onChange={(v) => onChange('inflationRate', v)}
       />
     </>

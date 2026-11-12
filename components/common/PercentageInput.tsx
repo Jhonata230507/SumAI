@@ -5,8 +5,7 @@ import { cn } from '@/lib/utils/cn'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { OptionalTag } from './OptionalTag'
-import { Tooltip } from '@/components/ui/tooltip'
-import { Info } from 'lucide-react'
+import { InfoTip } from './InfoTip'
 
 export interface PercentageInputProps {
   id: string
@@ -14,6 +13,7 @@ export interface PercentageInputProps {
   /** Stored as a fraction (0.0725); displayed as a percentage (7.25). */
   value: number
   onChange: (value: number) => void
+  /** What the field means, behind an info icon beside the label. */
   hint?: string
   error?: string
   step?: number
@@ -23,7 +23,7 @@ export interface PercentageInputProps {
   className?: string
   /** Shown at the right of the label row, e.g. a rate-basis switch. */
   adornment?: React.ReactNode
-  /** Secondary line under the input, e.g. the equivalent rate in another basis. */
+  /** A live value under the input, e.g. the equivalent rate in another basis. Descriptions go in `hint`. */
   note?: string
   /** Decimals shown when the field is not being edited. */
   decimals?: number
@@ -66,11 +66,7 @@ export function PercentageInput({
     <div className={cn('flex flex-col gap-1.5', className)}>
       <div className="flex flex-1 items-end gap-1.5">
         <Label htmlFor={id}>{label}</Label>
-        {hint && (
-          <Tooltip content={hint}>
-            <Info className="h-3.5 w-3.5 text-muted-foreground" />
-          </Tooltip>
-        )}
+        {hint && <InfoTip content={hint} id={`${id}-hint`} />}
         {(optional || adornment) && (
           <div className="ml-auto flex items-center gap-2">
             {optional && <OptionalTag />}
@@ -91,6 +87,7 @@ export function PercentageInput({
           disabled={disabled}
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
+          aria-describedby={hint ? `${id}-hint` : undefined}
           className={cn('pr-8 tabular-nums', error && 'border-destructive')}
           onChange={(event) => {
             setDraft(event.target.value)

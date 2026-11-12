@@ -17,6 +17,8 @@ export const loanSchema = z.object({
   frequency: paymentFrequency.default('monthly'),
   extraPayment: nonNegativeAmount.default(0),
   originationFee: nonNegativeAmount.default(0),
+  /** US: the fee as a share of the amount instead; used when above zero. */
+  originationFeeRate: rate.optional(),
   countryCode: countryCode.default('us'),
   // US only, all optional: they sharpen the rate estimate, eligibility and the explanation.
   annualIncome: nonNegativeAmount.optional(),

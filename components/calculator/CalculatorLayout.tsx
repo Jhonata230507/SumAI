@@ -30,6 +30,12 @@ export interface CalculatorLayoutProps {
   /** With `scrollableForm`: the form takes the height of the results and offers, and scrolls. */
   formFit?: boolean
   /**
+   * With `formPeek`: the form box keeps its peek height even when the results are
+   * taller, and stays in view (sticky) while they scroll, instead of stretching
+   * to the row and showing the fields meant to scroll.
+   */
+  formSticky?: boolean
+  /**
    * False until the user has filled in the required fields: the results, the
    * explanation and everything below make way for a prompt to enter the numbers.
    */
@@ -59,6 +65,7 @@ export function CalculatorLayout({
   scrollableForm = false,
   formPeek,
   formFit = false,
+  formSticky = false,
   ready = true,
 }: CalculatorLayoutProps) {
   const detailBlock = ready && detail && <Reveal className="space-y-8">{detail}</Reveal>
@@ -124,10 +131,15 @@ export function CalculatorLayout({
         <Reveal
           instant
           delay={80}
-          className="order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-1 xl:row-span-1 [&>*]:h-full"
+          className={cn(
+            'order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-1 xl:row-span-1',
+            // Sticky: the column still spans the row, so the form box sticks within it and
+            // never slides over what comes below (the what-if row and the charts).
+            !formSticky && '[&>*]:h-full',
+          )}
         >
           {/* Scrollable when asked (long forms), keeping the height it had before. */}
-          <FormColumn scrollable={scrollableForm} peek={formPeek} fit={formFit}>{form}</FormColumn>
+          <FormColumn scrollable={scrollableForm} peek={formPeek} fit={formFit} sticky={formSticky}>{form}</FormColumn>
         </Reveal>
 
         {!ready && (
