@@ -22,6 +22,8 @@ import { formatMonths } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
 import type { CountryConfig } from '@/types/country'
 import { BestOffers } from '@/components/calculator/BestOffers'
+import { getDebtPayoffConfig } from '@/features/calculators/debt-payoff/estimator/config'
+import { DebtPlanner } from './DebtPlanner'
 
 export interface DebtPayoffCalculatorProps {
   country: CountryConfig
@@ -30,7 +32,20 @@ export interface DebtPayoffCalculatorProps {
   related: ReactNode
 }
 
-export function DebtPayoffCalculator({ country, initial, header, related }: DebtPayoffCalculatorProps) {
+/**
+ * Countries with a planner config (the US for now) get the config-driven planner;
+ * the others keep the classic calculator below.
+ */
+export function DebtPayoffCalculator(props: DebtPayoffCalculatorProps) {
+  const config = getDebtPayoffConfig(props.country.code)
+  return config ? (
+    <DebtPlanner country={props.country} config={config} header={props.header} related={props.related} />
+  ) : (
+    <ClassicDebtPayoffCalculator {...props} />
+  )
+}
+
+function ClassicDebtPayoffCalculator({ country, initial, header, related }: DebtPayoffCalculatorProps) {
   const { t } = useI18n()
   // Opens with one empty debt and no budget: the user types their own.
   const start = useMemo(

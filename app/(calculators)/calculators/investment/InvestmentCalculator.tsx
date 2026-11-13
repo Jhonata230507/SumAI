@@ -1,12 +1,12 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils/cn'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
 import { GrowthChart } from '@/components/charts/lazy'
 import { CHART_PANEL } from '@/components/charts/theme'
+import { RangeBars } from '@/components/charts/RangeBars'
 import { AIAnalysis } from '@/components/ai/AIAnalysis'
 import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { PercentageInput } from '@/components/common/PercentageInput'
@@ -17,13 +17,13 @@ import { calculateInvestment, yearsToDouble } from '@/features/calculators/inves
 import { investmentSchema, type InvestmentSchema } from '@/features/calculators/investment/schema'
 import { useCalculator } from '@/features/calculators/use-calculator'
 import { formatCurrency } from '@/lib/utils/format-currency'
-import { formatNumber, formatPercent } from '@/lib/utils/format-number'
+import { formatNumber } from '@/lib/utils/format-number'
 import { useI18n } from '@/lib/i18n/client'
 import { FREQUENCY_PER_YEAR } from '@/types/common'
 import type { CountryConfig } from '@/types/country'
 import { BestOffers } from '@/components/calculator/BestOffers'
-import { getBenchmarks } from '@/lib/countries'
-import { UsInvestmentFields } from './UsInvestmentFields'
+import { getInvestmentConfig } from '@/features/calculators/investment/estimator/config'
+import { InvestmentEstimator } from './InvestmentEstimator'
 
 export interface InvestmentCalculatorProps {
   country: CountryConfig
@@ -35,32 +35,27 @@ export interface InvestmentCalculatorProps {
 /** Fields the calculator opens with empty (NaN): the user types their own numbers. */
 const START = { initialAmount: Number.NaN, contribution: Number.NaN, annualReturn: Number.NaN }
 
-/** US: start and duration are typed; return, fees, inflation and taxes fall back to stated defaults. */
-const US_DEFAULTS = { annualReturn: 0.07, inflationRate: getBenchmarks('us').inflation, taxRate: 0.15 }
-const START_US = {
-  initialAmount: Number.NaN,
-  contribution: Number.NaN,
-  years: Number.NaN,
-  annualReturn: Number.NaN,
-  feeRate: Number.NaN,
-  inflationRate: Number.NaN,
-  taxRate: Number.NaN,
-  contributionGrowth: 0,
+/**
+ * Countries with an estimator config (the US for now) get the config-driven
+ * estimator; the others keep the classic calculator below.
+ */
+export function InvestmentCalculator(props: InvestmentCalculatorProps) {
+  const config = getInvestmentConfig(props.country.code)
+  return config ? (
+    <InvestmentEstimator country={props.country} config={config} header={props.header} related={props.related} />
+  ) : (
+    <ClassicInvestmentCalculator {...props} />
+  )
 }
-const FALLBACK_US = { contribution: 0, feeRate: 0, ...US_DEFAULTS }
 
-export function InvestmentCalculator({ country, initial, header, related }: InvestmentCalculatorProps) {
+function ClassicInvestmentCalculator({ country, initial, header, related }: InvestmentCalculatorProps) {
   const { t } = useI18n()
-  const isUs = country.code === 'us'
   const { input, committed, errors, result, set, ready, reset } = useCalculator(
     investmentSchema,
     calculateInvestment,
     initial,
-    isUs ? { start: START_US, fallback: FALLBACK_US } : { start: START },
+    { start: START },
   )
-  // US: tax is owed on the gains, not on what was put in.
-  const gains = Math.max(0, result.finalBalance - result.totalContributed)
-  const afterTax = result.finalBalance - gains * (committed.taxRate ?? 0)
 
   const doubling = yearsToDouble(committed.annualReturn - committed.feeRate)
   const compact = (value: number) => formatCurrency(value, result.currency, { compact: true })
@@ -89,90 +84,73 @@ export function InvestmentCalculator({ country, initial, header, related }: Inve
     },
     { key: 'totalFees', label: t.investment.lostToFees, value: result.totalFees, format: 'currency' },
   ]
-  if (isUs) {
-    figures.splice(1, 0, {
-      key: 'afterTax',
-      label: t.investment.us.afterTax,
-      value: afterTax,
-      format: 'currency',
-      hint: t.investment.us.afterTaxHint,
-    })
-  }
-
   return (
     <CalculatorLayout
       ready={ready}
-      // US: the first six fields show; inflation and tax scroll inside the form box.
-      scrollableForm={isUs}
-      formPeek={isUs ? 6 : undefined}
       header={header}
       related={related}
       form={
         <CalculatorForm onReset={reset}>
-          {isUs ? (
-            <UsInvestmentFields country={country} input={input} errors={errors} defaults={US_DEFAULTS} onChange={set} />
-          ) : (
-            <>
-              <CurrencyInput
-                id="initial"
-                label={t.investment.startingAmount}
-                currency={country.currency}
-                value={input.initialAmount}
-                onChange={(v) => set('initialAmount', v)}
-              />
-              <CurrencyInput
-                id="contribution"
-                label={t.investment.monthlyContribution}
-                currency={country.currency}
-                value={input.contribution}
-                onChange={(v) => set('contribution', v)}
-              />
+          <>
+            <CurrencyInput
+              id="initial"
+              label={t.investment.startingAmount}
+              currency={country.currency}
+              value={input.initialAmount}
+              onChange={(v) => set('initialAmount', v)}
+            />
+            <CurrencyInput
+              id="contribution"
+              label={t.investment.monthlyContribution}
+              currency={country.currency}
+              value={input.contribution}
+              onChange={(v) => set('contribution', v)}
+            />
 
-              <PercentageInput
-                id="return"
-                label={t.investment.expectedReturn}
-                hint={t.investment.expectedReturnHint}
-                value={input.annualReturn}
-                error={errors.annualReturn}
-                onChange={(v) => set('annualReturn', v)}
-              />
+            <PercentageInput
+              id="return"
+              label={t.investment.expectedReturn}
+              hint={t.investment.expectedReturnHint}
+              value={input.annualReturn}
+              error={errors.annualReturn}
+              onChange={(v) => set('annualReturn', v)}
+            />
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="years">{t.investment.yearsInvested}</Label>
-                  <span className="text-sm tabular-nums">{input.years}</span>
-                </div>
-                <Slider id="years" min={1} max={50} value={input.years} onChange={(v) => set('years', v)} />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="years">{t.investment.yearsInvested}</Label>
+                <span className="text-sm tabular-nums">{input.years}</span>
               </div>
+              <Slider id="years" min={1} max={50} value={input.years} onChange={(v) => set('years', v)} />
+            </div>
 
-              <div className="space-y-4">
-                <PercentageInput
-                  id="fees"
-                  optional
-                  label={t.investment.fees}
-                  hint={t.investment.feesHint}
-                  step={0.01}
-                  value={input.feeRate}
-                  onChange={(v) => set('feeRate', v)}
-                />
-                <PercentageInput
-                  id="inflation"
-                  optional
-                  label={t.investment.inflation}
-                  value={input.inflationRate}
-                  onChange={(v) => set('inflationRate', v)}
-                />
-              </div>
-
+            <div className="space-y-4">
               <PercentageInput
-                id="raise"
+                id="fees"
                 optional
-                label={t.investment.raise}
-                value={input.contributionGrowth}
-                onChange={(v) => set('contributionGrowth', v)}
+                label={t.investment.fees}
+                hint={t.investment.feesHint}
+                step={0.01}
+                value={input.feeRate}
+                onChange={(v) => set('feeRate', v)}
               />
-            </>
-          )}
+              <PercentageInput
+                id="inflation"
+                optional
+                label={t.investment.inflation}
+                value={input.inflationRate}
+                onChange={(v) => set('inflationRate', v)}
+              />
+            </div>
+
+            <PercentageInput
+              id="raise"
+              optional
+              label={t.investment.raise}
+              value={input.contributionGrowth}
+              onChange={(v) => set('contributionGrowth', v)}
+            />
+          </>
         </CalculatorForm>
       }
       results={
@@ -233,91 +211,5 @@ export function InvestmentCalculator({ country, initial, header, related }: Inve
         />
       }
     />
-  )
-}
-
-const BAR_TONE = {
-  weaker: 'from-white/[0.05] to-white/[0.16]',
-  expected: 'from-[#2a6fd0] to-[#5ea4f2]',
-  stronger: 'from-[#147a5b]/70 to-[#4fd1a2]/80',
-} as const
-
-/**
- * The three outcomes as bars on a shared baseline, sized to their value, with
- * faint guide lines. The expected outcome leads (blue); the weaker and stronger
- * ones show how far they sit from it.
- */
-function RangeBars({
-  items,
-  format,
-  locale,
-}: {
-  items: { key: keyof typeof BAR_TONE; label: string; value: number }[]
-  format: (value: number) => string
-  locale: string
-}) {
-  const peak = Math.max(...items.map((item) => item.value), 1)
-  const expected = items.find((item) => item.key === 'expected')?.value ?? peak
-  const delta = (value: number) => {
-    const change = value / expected - 1
-    return `${change > 0 ? '+' : '−'}${formatPercent(Math.abs(change), locale, 0)}`
-  }
-
-  return (
-    <dl className="mt-5 flex min-h-44 flex-1 flex-col">
-      {/* Bars on a shared baseline, with faint guides at a third and two thirds. */}
-      <div className="relative flex flex-1 items-end gap-4 border-b border-white/[0.12] px-2">
-        <span aria-hidden className="absolute inset-x-0 top-1/3 border-t border-dashed border-white/[0.05]" />
-        <span aria-hidden className="absolute inset-x-0 top-2/3 border-t border-dashed border-white/[0.05]" />
-        {items.map((item) => {
-          const strong = item.key === 'expected'
-          return (
-            <div key={item.key} className="relative flex h-full flex-1 flex-col items-center justify-end">
-              <dd
-                className={cn(
-                  'mb-2 tabular-nums',
-                  strong ? 'text-lg font-semibold text-foreground' : 'text-sm font-medium text-foreground/75',
-                )}
-              >
-                {format(item.value)}
-              </dd>
-              <div
-                aria-hidden
-                className={cn(
-                  'w-full max-w-28 rounded-t-xl bg-gradient-to-t shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] transition-[height] duration-500',
-                  BAR_TONE[item.key],
-                )}
-                style={{ height: `${Math.max(0.06, Math.min(1, item.value / peak)) * 80}%` }}
-              />
-            </div>
-          )
-        })}
-      </div>
-      {/* Labels, with how far each outcome sits from the expected one. */}
-      <div className="mt-2.5 flex gap-4 px-2">
-        {items.map((item) => (
-          <dt key={item.key} className="flex flex-1 flex-col items-center text-center">
-            <span
-              className={cn(
-                'text-xs',
-                item.key === 'expected' ? 'font-medium text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {item.label}
-            </span>
-            {item.key !== 'expected' && (
-              <span
-                className={cn(
-                  'mt-0.5 text-[11px] tabular-nums',
-                  item.value < expected ? 'text-muted-foreground/70' : 'text-emerald-400/80',
-                )}
-              >
-                {delta(item.value)}
-              </span>
-            )}
-          </dt>
-        ))}
-      </div>
-    </dl>
   )
 }

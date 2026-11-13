@@ -18,7 +18,7 @@ export interface AdvantageItem {
 }
 
 /**
- * The "Why SumAI" showcase: one large card — text and a call to action on the
+ * The "Why Suma" showcase: one large card — text and a call to action on the
  * left, a visual on the right — stepped through with the same round prev/next
  * buttons as the calculators carousel, centred under the card. The buttons
  * disable at either end, like the carousel's.

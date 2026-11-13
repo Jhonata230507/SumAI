@@ -75,7 +75,7 @@ Return JSON:
   "tradeoffs": [{ "option": "name", "pros": ["..."], "cons": ["..."] }]
 }`
 
-export const COACH_SYSTEM = `You are a financial coach inside SumAI.
+export const COACH_SYSTEM = `You are a financial coach inside Suma.
 
 You have the user's saved scenarios and goals. Answer their questions about those figures, help them think through what to change, and point them at the calculator that fits. Ask a clarifying question when the answer genuinely depends on something you were not told.
 

@@ -34,7 +34,7 @@ export const en = {
   },
 
   meta: {
-    siteTitle: 'SumAI — Financial calculators that explain themselves',
+    siteTitle: 'Suma — Financial calculators that explain themselves',
     siteDescription:
       'Loan, mortgage, car loan, savings, investment and debt payoff calculators, with plain-language explanations of every result.',
   },
@@ -67,18 +67,19 @@ export const en = {
 
   footer: {
     tagline: 'Financial calculators that explain their own numbers.',
-    ctaLine: 'You decide. SumAI does the math.',
+    ctaLine: 'You decide. Suma does the math.',
     ctaButton: 'Try a calculator',
     calculators: 'Calculators',
     compare: 'Compare',
     company: 'Company',
     about: 'About',
+    privacy: 'Privacy policy',
     mortgages: 'Mortgages',
     carLoans: 'Car loans',
     personalLoans: 'Personal loans',
     savingsAccounts: 'Savings accounts',
     disclaimer:
-      'SumAI provides general financial information and estimates, not financial advice. Rates shown are illustrative and are not offers of credit. Figures depend on the inputs you provide and on the assumptions stated alongside each result.',
+      'Suma provides general financial information and estimates, not financial advice. Rates shown are illustrative and are not offers of credit. Figures depend on the inputs you provide and on the assumptions stated alongside each result.',
   },
 
   calculators: {
@@ -179,9 +180,9 @@ export const en = {
     browse: 'Browse calculators',
     scrollHint: 'Scroll to explore',
     advantages: {
-      titleLead: 'Why SumAI works',
+      titleLead: 'Why Suma works',
       titleEmphasis: 'in your favour.',
-      tablist: 'Why SumAI',
+      tablist: 'Why Suma',
       previous: 'Previous reason',
       next: 'Next reason',
       position: (current: number, total: number) => `${current} of ${total}`,
@@ -267,7 +268,7 @@ export const en = {
         {
           name: 'Emily Watson',
           role: 'Sales manager',
-          quote: 'SumAI showed me a loan two points cheaper than the one my bank offered, and explained exactly why.',
+          quote: 'Suma showed me a loan two points cheaper than the one my bank offered, and explained exactly why.',
         },
         {
           name: 'Sofia Ramirez',
@@ -299,11 +300,11 @@ export const en = {
 
   about: {
     metaTitle: 'About',
-    metaDescription: 'Why SumAI exists, and the rules it follows.',
-    title: 'About SumAI',
+    metaDescription: 'Why Suma exists, and the rules it follows.',
+    title: 'About Suma',
     paragraphs: [
       'Most financial calculators hand you a number and stop. The monthly payment is on screen, but not why it is what it is, what it assumes, or what would move it.',
-      'SumAI is built on the opposite idea. Every calculation shows its working. Every result comes with the assumptions behind it. And when you want to understand what a figure means for you, you can ask — and get an answer grounded only in the numbers you are looking at.',
+      'Suma is built on the opposite idea. Every calculation shows its working. Every result comes with the assumptions behind it. And when you want to understand what a figure means for you, you can ask — and get an answer grounded only in the numbers you are looking at.',
     ],
     rulesTitle: 'The rules we follow',
     rules: [
@@ -319,35 +320,77 @@ export const en = {
 
   howItWorks: {
     metaTitle: 'How it works',
-    metaDescription: 'How SumAI calculates, explains and compares.',
-    title: 'How it works',
-    subtitle: 'Five steps, and the first three need no account.',
+    metaDescription: 'How Suma turns your numbers into a clear comparison, and finds offers that fit.',
+    title: 'From your numbers to a decision',
+    subtitle: 'Five steps. The first four need no account, and every calculator is free.',
+    stepLabel: (n: number) => `Step ${n}`,
     steps: [
       {
-        title: 'Enter your numbers',
-        body: 'Pick a calculator and fill in what you know. Results update as you type — there is no submit button to hunt for.',
+        title: 'Start from what you know',
+        body: 'A price, a monthly budget or a goal: each calculator asks the question your way. Not sure what to type? Try an example and see results straight away.',
+        tag: 'No sign-up',
       },
       {
         title: 'See the full picture',
-        body: 'Beyond the headline payment: total interest, the payoff schedule, and where each payment actually goes.',
+        body: 'Beyond the headline payment: total interest, what it is worth in today’s money, the payoff date and where each payment goes. Results update as you type.',
+        tag: 'Live results',
       },
       {
-        title: 'Try what-ifs',
-        body: 'One click shows what a shorter term, a lower rate or a little extra each month would change — trade-offs included.',
+        title: 'Compare your options',
+        body: 'What a shorter term, a lower rate or a little extra each month would change. Avalanche against snowball. Your plan against paying only the minimums. Trade-offs included.',
+        tag: 'Side by side',
       },
       {
-        title: 'Ask what it means',
-        body: 'Get a plain-language read on your result. The explanation references only the figures computed for you.',
+        title: 'Find offers that fit',
+        body: 'Lenders and accounts ranked for your amount and term, by rate and fees, with whether you are likely to qualify.',
+        tag: 'Ranked for you',
       },
       {
-        title: 'Save and compare',
-        body: 'Sign in to keep scenarios, compare them side by side, and track goals over time.',
+        title: 'Save and track',
+        body: 'Sign in to keep scenarios, compare them side by side and follow your goals over time.',
+        tag: 'Free account',
+      },
+    ],
+    visuals: {
+      modes: { price: 'I know the price', budget: 'I know my budget' },
+      price: 'Home price',
+      down: 'Down payment',
+      example: 'Try an example',
+      payment: 'Monthly payment',
+      interest: 'Total interest',
+      paidOff: 'Paid off',
+      avalanche: 'Avalanche',
+      snowball: 'Snowball',
+      minimums: 'Minimums only',
+      bestRate: 'Best rate',
+      qualify: 'You likely qualify',
+      perMonth: '/mo',
+      saved: 'Saved scenarios',
+      goal: 'Emergency fund',
+      ofGoal: (pct: string) => `${pct} of goal`,
+    },
+    principlesTitle: 'What you can count on',
+    principles: [
+      {
+        title: 'Every estimate is labelled',
+        body: 'Leave a field empty and we use a stated estimate, and say so next to the result.',
+      },
+      {
+        title: 'The math is shown',
+        body: 'Totals, charts and schedules come from one calculation, down to the month-by-month detail.',
+      },
+      {
+        title: 'Built for your market',
+        body: 'Rates, taxes and lending conventions follow the country you pick.',
       },
     ],
     rateNoteTitle: 'A note on rates',
     rateNoteBody:
       'A rate of 12% does not mean the same thing everywhere. Colombian lenders quote an effective annual rate (E.A.), which already includes compounding. US lenders quote a nominal annual rate compounded monthly, which costs slightly more than it sounds. We convert correctly for your market, and every rate we show says which kind it is.',
+    ctaTitle: 'Run your numbers',
+    ctaBody: 'Pick a calculator, or try an example to see how it works.',
     start: 'Start with a calculator',
+    compare: 'Compare rates',
   },
 
   pricing: {
@@ -829,6 +872,53 @@ export const en = {
     stronger: 'Stronger',
     doubling: (years: string) =>
       `At this net return, money doubles roughly every ${years} years.`,
+    // The config-driven estimator (US for now): what a plan grows into, or what a goal takes.
+    estimator: {
+      modeLabel: 'What do you want to know?',
+      modes: { grow: 'How much will I have?', goal: 'How much do I need to save?' },
+      target: 'Target amount',
+      targetHint: 'The balance you want to reach by the end.',
+      returnHint: (rate: string) =>
+        `Long-run averages are not guarantees. Leave it empty and we use ${rate}, a long-run average for a diversified stock and bond mix.`,
+      accountType: 'Account type',
+      accountTypes: {
+        unspecified: 'Not specified',
+        taxable: 'Taxable brokerage',
+        deferred: 'Tax-deferred (Traditional IRA, 401(k))',
+        free: 'Tax-free (Roth IRA, Roth 401(k))',
+      },
+      accountHint: 'How the account is taxed decides what you keep. Not specified leaves tax out.',
+      freeNote: 'Qualified withdrawals are tax-free, so no tax is applied.',
+      taxRate: { taxable: 'Tax rate on gains', deferred: 'Tax rate on withdrawals' },
+      taxHint: {
+        taxable: (rate: string) =>
+          `Charged on the gains when you sell. Leave it empty and we use ${rate}, the most common long-term capital-gains rate.`,
+        deferred: (rate: string) =>
+          `Charged on every withdrawal, as income. Leave it empty and we use ${rate}, a common federal bracket.`,
+      },
+      increase: 'Annual contribution increase',
+      increaseHint: 'Many people raise contributions as their income grows. Applied once a year.',
+      timing: 'Contribution timing',
+      timings: { start: 'Start', end: 'End' },
+      timingHint: 'Whether each contribution goes in at the start or the end of its period. At the start, it earns one more period of growth.',
+      example: 'Try an example',
+      afterTax: 'After taxes',
+      afterTaxHint: {
+        taxable: (tax: string) => `After ${tax} of tax on the gains.`,
+        deferred: (tax: string) => `After ${tax} of tax on withdrawals.`,
+        free: 'A tax-free account: nothing to pay on qualified withdrawals.',
+      },
+      growth: 'Growth',
+      growthHint: 'What the money earned beyond what you put in.',
+      needed: (frequency: string) => `You need to invest · ${frequency.toLowerCase()}`,
+      neededDetail: (target: string, years: number) => `To reach ${target} in ${years} years.`,
+      neededRising: (rate: string) => `Rising ${rate} a year.`,
+      alreadyThere: 'Your initial investment already reaches the target at this return.',
+      targetLabel: 'Target',
+      putIn: "You'll put in",
+      growthDoes: 'Growth adds',
+      targetToday: 'Target in today’s money',
+    },
     us: {
       initial: 'Initial investment',
       contribution: 'Recurring contribution',
@@ -869,6 +959,49 @@ export const en = {
     youDeposit: 'You deposit',
     interestEarned: 'Interest earned',
     chartCaption: 'Deposits and interest over time',
+    // The config-driven estimator (US for now): the contribution, the time, or the balance.
+    estimator: {
+      findOut: 'Find out',
+      modes: { contribution: 'How much to save', time: 'How long it takes', balance: 'What I will have' },
+      goalOptionalHint: 'Optional here. Add one to see whether this plan gets there.',
+      rate: 'Interest rate',
+      basis: 'Rate quoted as',
+      bases: { apy: 'APY', apr: 'APR' },
+      rateHint: {
+        apy: (rate: string) =>
+          `The yearly yield banks advertise, compounding included. Leave it empty and we use an estimated ${rate} APY; rates vary a lot by bank and account.`,
+        apr: (rate: string) =>
+          `A nominal yearly rate, before compounding: pick how often it compounds under Improve my estimates. Leave it empty and we use an estimated ${rate} APY.`,
+      },
+      compoundingHint: 'Only matters for an APR. An APY already includes compounding.',
+      todaysDollars: 'Goal is in today’s dollars',
+      todaysDollarsHint:
+        'Raises the goal by the inflation assumption up to the date you reach it, so you see the number you will actually need.',
+      tax: 'Estimated tax on interest',
+      taxHint:
+        'Interest in a regular savings account is generally taxed as ordinary income. The result uses the rate after this tax.',
+      startDate: 'Start date',
+      startDateHint: 'Month you start. Turns the time to your goal into a date.',
+      neededFuture: (amount: string) => `That is ${amount} in future dollars.`,
+      alreadyThere: 'Your initial balance reaches this goal on interest alone, so you are on track.',
+      time: 'Time to reach your goal',
+      timeDetail: (contribution: string, frequency: string) => `Saving ${contribution} ${frequency.toLowerCase()}.`,
+      timeNoContribution: 'On interest alone.',
+      reachedOn: (date: string) => `Reached in ${date}.`,
+      endsOn: (date: string) => `On ${date}.`,
+      immediate: 'Now',
+      immediateDetail: 'Your initial balance already covers the goal.',
+      unreachable:
+        "This goal can't be reached as planned: nothing grows the balance fast enough. Add or raise a contribution, or check the rate and inflation.",
+      netYield: 'Net yield',
+      netYieldHint: 'What the balance earns in a year after compounding and the tax on interest.',
+      endingBalance: 'Ending balance',
+      inTodaysMoney: 'In today’s money',
+      inTodaysMoneyHint: 'The ending balance adjusted for inflation: what it would buy today.',
+      goalFuture: 'Goal in future dollars',
+      goalFutureHint: 'Your goal raised by inflation to the date you reach it: the number you will actually need.',
+      interestAfterTaxHint: 'After the estimated tax on interest.',
+    },
     us: {
       initialBalance: 'Initial savings balance',
       goal: 'Savings goal',
@@ -893,6 +1026,67 @@ export const en = {
   },
 
   debtPayoff: {
+    // The config-driven planner (US for now): avalanche and snowball side by side, against minimums only.
+    planner: {
+      rate: 'Interest rate (APR)',
+      rateHint: 'Find it on your statement.',
+      minimumBelowInterest: "This payment doesn't cover the interest. The balance will grow.",
+      maxDebts: (n: number) => `You can add up to ${n} debts.`,
+      amount: 'Monthly amount for debts',
+      amountUnit: 'Enter the amount as',
+      amountUnits: { total: 'Total', extra: 'Extra' },
+      amountHint: {
+        total: 'Everything you can put toward your debts each month, minimums included.',
+        extra: 'What you can pay each month on top of the minimums.',
+      },
+      minimumsTotal: (amount: string) => `Your minimums add up to ${amount}.`,
+      belowMinimums: (amount: string) => `Your minimums add up to ${amount}. Increase the amount to cover them.`,
+      totalIs: (amount: string) => `${amount} a month in total.`,
+      oneTime: 'One-time extra payment',
+      oneTimeHint: 'Like a tax refund or a bonus. Made in the first month and sent to the priority debt.',
+      startDate: 'Start date',
+      startDateHint: 'Month of your first payment. Turns the results into dates.',
+      example: 'Try an example',
+      exampleNames: { card: 'Credit card', store: 'Store card', student: 'Student loan' } as Record<string, string>,
+      showFor: 'Show details for',
+      strategies: {
+        avalanche: { name: 'Avalanche', rule: 'Highest rate first', benefit: 'Pay the least interest overall' },
+        snowball: { name: 'Snowball', rule: 'Smallest balance first', benefit: 'Clear whole debts sooner' },
+      },
+      debtFree: 'Debt free',
+      never: 'Never',
+      timeToPayOff: 'Time to pay off',
+      totalInterest: 'Total interest',
+      totalPaid: 'Total paid',
+      savedVsMinimums: 'Saved vs. minimums only',
+      saved: (interest: string, time: string) => `${interest} in interest, ${time} sooner`,
+      savedNoTime: (interest: string) => `${interest} in interest`,
+      baseline: (time: string, interest: string) => `Paying only the minimums: ${time} and ${interest} in interest.`,
+      baselineNever: 'Paying only the minimums never clears these debts.',
+      verdictInterest: (amount: string) => `Avalanche costs ${amount} less in interest`,
+      verdictEarlier: (time: string) => ` and finishes ${time} earlier.`,
+      verdictSameFinish: ' and finishes in the same month.',
+      verdictFirst: (time: string) => ` Snowball clears your first debt ${time} sooner.`,
+      verdictSame: 'With these debts, both methods give the same result.',
+      verdictSingle: 'With one debt, both methods give the same result.',
+      neverPays: "This amount can't pay these debts off. Increase the monthly amount.",
+      payoffOrder: 'Payoff order',
+      colDebt: 'Debt',
+      colPaidOff: 'Paid off',
+      colInterest: 'Interest paid',
+      monthN: (n: number) => `Month ${n}`,
+      chartTitle: 'Total balance over time',
+      chartViews: { total: 'Both methods', perDebt: 'Per debt' },
+      chartView: 'Chart view',
+      minimumsOnly: 'Minimums only',
+      schedule: 'Month by month',
+      colMonth: 'Month',
+      colPayment: 'Payment',
+      colScheduleInterest: 'Interest',
+      colBalance: 'Balance left',
+      notes:
+        'Estimates. Rates are treated as yearly rates compounded monthly, while credit cards often compound daily. Minimums are held fixed here; card minimums usually shrink as the balance falls, so real schedules can differ.',
+    },
     formTitle: 'Your debts',
     debtNameLabel: (i: number) => `Name of debt ${i}`,
     remove: (name: string) => `Remove ${name}`,

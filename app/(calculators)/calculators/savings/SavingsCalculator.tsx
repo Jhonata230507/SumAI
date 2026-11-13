@@ -22,8 +22,8 @@ import { useI18n } from '@/lib/i18n/client'
 import { FREQUENCY_PER_YEAR } from '@/types/common'
 import type { CountryConfig } from '@/types/country'
 import { BestOffers } from '@/components/calculator/BestOffers'
-import { getBenchmarks } from '@/lib/countries'
-import { UsSavingsFields } from './UsSavingsFields'
+import { getSavingsConfig } from '@/features/calculators/savings/estimator/config'
+import { SavingsEstimator } from './SavingsEstimator'
 
 export interface SavingsCalculatorProps {
   country: CountryConfig
@@ -46,29 +46,26 @@ const FALLBACK = { initialAmount: 0 }
 /** The goal, emptied when switching to "reach a goal", must then be filled. */
 const REQUIRED: 'targetAmount'[] = ['targetAmount']
 
-/** US: one goal-based flow. Balance, goal and duration are typed; the rest falls back. */
-const US = getBenchmarks('us')
-const START_US = {
-  mode: 'target' as const,
-  initialAmount: Number.NaN,
-  targetAmount: Number.NaN,
-  deposit: Number.NaN,
-  months: Number.NaN,
-  annualRate: Number.NaN,
-  inflationRate: Number.NaN,
+/**
+ * Countries with an estimator config (the US for now) get the config-driven
+ * estimator; the others keep the classic calculator below.
+ */
+export function SavingsCalculator(props: SavingsCalculatorProps) {
+  const config = getSavingsConfig(props.country.code)
+  return config ? (
+    <SavingsEstimator country={props.country} config={config} header={props.header} related={props.related} />
+  ) : (
+    <ClassicSavingsCalculator {...props} />
+  )
 }
-const FALLBACK_US = { deposit: 0, annualRate: US.savingsHighYield, inflationRate: US.inflation }
 
-export function SavingsCalculator({ country, initial, header, related }: SavingsCalculatorProps) {
+function ClassicSavingsCalculator({ country, initial, header, related }: SavingsCalculatorProps) {
   const { t } = useI18n()
-  const isUs = country.code === 'us'
   const { input, committed, errors, result, set, ready, update, reset } = useCalculator(
     savingsSchema,
     calculateSavings,
     initial,
-    isUs
-      ? { start: START_US, fallback: FALLBACK_US, required: REQUIRED }
-      : { start: START, fallback: FALLBACK, required: REQUIRED },
+    { start: START, fallback: FALLBACK, required: REQUIRED },
   )
 
   const locale = country.locale
@@ -76,45 +73,11 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
   const targeting = committed.mode === 'target'
   // Reaching a goal: the plan is saving the required amount — the chart, totals
   // and recommendations follow that, not a deposit the user never typed.
-  // US: with a contribution typed, the plan is that contribution; without one, the one needed.
-  const usesOwnDeposit = isUs && committed.deposit > 0
   const plan = useMemo(
     () =>
-      targeting && !usesOwnDeposit
-        ? calculateSavings({ ...committed, mode: 'project', deposit: result.requiredDeposit ?? 0 })
-        : result,
-    [targeting, usesOwnDeposit, committed, result],
+      targeting ? calculateSavings({ ...committed, mode: 'project', deposit: result.requiredDeposit ?? 0 }) : result,
+    [targeting, committed, result],
   )
-
-  // US: whether the typed contribution reaches the goal, and the goal after inflation.
-  const goal = committed.targetAmount ?? 0
-  const years = committed.months / 12
-  const goalToday = goal / (1 + (committed.inflationRate ?? 0)) ** years
-  const usStatus = !usesOwnDeposit
-    ? t.savings.us.addContribution
-    : result.reachesTarget
-      ? t.savings.us.onTrack(formatCurrency(result.finalBalance - goal, result.currency))
-      : t.savings.us.short(formatCurrency(goal - result.finalBalance, result.currency)) +
-        (result.monthsToTarget ? t.savings.us.reachIn(duration(result.monthsToTarget)) : '')
-  const usFigures: SummaryFigure[] = [
-    {
-      key: 'requiredDeposit',
-      label: t.savings.us.needed(t.savings.us.frequencies[committed.depositFrequency as 'monthly']),
-      value: result.requiredDeposit ?? 0,
-      format: 'currency',
-      emphasis: 'primary',
-      detail: t.savings.toReach(formatCurrency(goal, result.currency), duration(committed.months)),
-    },
-    { key: 'projected', label: t.savings.us.projected, value: plan.finalBalance, format: 'currency' },
-    { key: 'totalInterest', label: t.savings.interestEarned, value: plan.totalInterest, format: 'currency' },
-    {
-      key: 'goalToday',
-      label: t.savings.us.goalToday,
-      value: goalToday,
-      format: 'currency',
-      hint: t.savings.us.goalTodayHint,
-    },
-  ]
 
   const figures: SummaryFigure[] = targeting
     ? [
@@ -160,140 +123,106 @@ export function SavingsCalculator({ country, initial, header, related }: Savings
   return (
     <CalculatorLayout
       ready={ready}
-      // US: the first six fields show; compounding and inflation scroll inside the form box.
-      scrollableForm={isUs}
-      formPeek={isUs ? 6 : undefined}
       header={header}
       related={related}
       form={
-        <CalculatorForm onReset={reset} error={isUs ? undefined : errors.targetAmount}>
-          {isUs ? (
-            <UsSavingsFields
-              country={country}
-              input={input}
-              errors={errors}
-              defaultRate={US.savingsHighYield}
-              defaultInflation={US.inflation}
-              onChange={set}
-            />
-          ) : (
-            <>
-              <Tabs
-                defaultValue={input.mode}
-                value={input.mode}
-                onValueChange={(mode) =>
-                  update({
-                    ...input,
-                    mode: mode as SavingsSchema['mode'],
-                    // Reaching a goal asks for the goal and solves for the deposit; projecting
-                    // asks for the deposit. Each mode starts its own field empty.
-                    targetAmount: mode === 'target' ? Number.NaN : null,
-                    deposit: mode === 'target' ? 0 : Number.NaN,
-                  })
-                }
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="project">{t.savings.project}</TabsTrigger>
-                  <TabsTrigger value="target">{t.savings.target}</TabsTrigger>
-                </TabsList>
-              </Tabs>
+        <CalculatorForm onReset={reset} error={errors.targetAmount}>
+          <>
+            <Tabs
+              defaultValue={input.mode}
+              value={input.mode}
+              onValueChange={(mode) =>
+                update({
+                  ...input,
+                  mode: mode as SavingsSchema['mode'],
+                  // Reaching a goal asks for the goal and solves for the deposit; projecting
+                  // asks for the deposit. Each mode starts its own field empty.
+                  targetAmount: mode === 'target' ? Number.NaN : null,
+                  deposit: mode === 'target' ? 0 : Number.NaN,
+                })
+              }
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="project">{t.savings.project}</TabsTrigger>
+                <TabsTrigger value="target">{t.savings.target}</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-              {input.mode === 'target' && (
-                <CurrencyInput
-                  id="target"
-                  label={t.savings.targetAmount}
-                  currency={country.currency}
-                  value={input.targetAmount ?? Number.NaN}
-                  onChange={(v) => set('targetAmount', v)}
-                />
-              )}
-
+            {input.mode === 'target' && (
               <CurrencyInput
-                id="initial"
-                label={t.savings.startingBalance}
+                id="target"
+                label={t.savings.targetAmount}
                 currency={country.currency}
-                value={input.initialAmount}
-                optional
-                hint={t.savings.startingBalanceHint}
-                onChange={(v) => set('initialAmount', v)}
+                value={input.targetAmount ?? Number.NaN}
+                onChange={(v) => set('targetAmount', v)}
               />
-              {/* Reaching a goal solves for the deposit, so it is not asked for. */}
-              {input.mode !== 'target' && (
-                <CurrencyInput
-                  id="deposit"
-                  label={t.savings.monthlyDeposit}
-                  currency={country.currency}
-                  value={input.deposit}
-                  onChange={(v) => set('deposit', v)}
-                />
+            )}
+
+            <CurrencyInput
+              id="initial"
+              label={t.savings.startingBalance}
+              currency={country.currency}
+              value={input.initialAmount}
+              optional
+              hint={t.savings.startingBalanceHint}
+              onChange={(v) => set('initialAmount', v)}
+            />
+            {/* Reaching a goal solves for the deposit, so it is not asked for. */}
+            {input.mode !== 'target' && (
+              <CurrencyInput
+                id="deposit"
+                label={t.savings.monthlyDeposit}
+                currency={country.currency}
+                value={input.deposit}
+                onChange={(v) => set('deposit', v)}
+              />
+            )}
+
+            <RateInput
+              id="rate"
+              country={country}
+              label={t.savings.interestRate}
+              value={input.annualRate}
+              error={errors.annualRate}
+              onChange={(v) => set('annualRate', v)}
+            />
+
+            {/* An E.A. quote already includes compounding, so the compounding
+            choice only appears where savings rates are quoted nominal. */}
+            <div className={country.rules.consumerRatesEffective ? undefined : 'grid grid-cols-2 gap-3'}>
+              <TermInput
+                id="horizon"
+                label={t.savings.timeFrame}
+                months={input.months}
+                onChange={(months) => set('months', months)}
+              />
+              {!country.rules.consumerRatesEffective && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="compounding">{t.savings.compounding}</Label>
+                  <Select
+                    id="compounding"
+                    value={String(input.compoundsPerYear)}
+                    options={COMPOUNDING.map((option) => ({
+                      value: String(option.value),
+                      label: t.savings.compoundingOptions[option.key],
+                    }))}
+                    onChange={(e) => set('compoundsPerYear', Number(e.target.value))}
+                  />
+                </div>
               )}
-
-              <RateInput
-                id="rate"
-                country={country}
-                label={t.savings.interestRate}
-                value={input.annualRate}
-                error={errors.annualRate}
-                onChange={(v) => set('annualRate', v)}
-              />
-
-              {/* An E.A. quote already includes compounding, so the compounding
-              choice only appears where savings rates are quoted nominal. */}
-              <div className={country.rules.consumerRatesEffective ? undefined : 'grid grid-cols-2 gap-3'}>
-                <TermInput
-                  id="horizon"
-                  label={t.savings.timeFrame}
-                  months={input.months}
-                  onChange={(months) => set('months', months)}
-                />
-                {!country.rules.consumerRatesEffective && (
-                  <div className="space-y-1.5">
-                    <Label htmlFor="compounding">{t.savings.compounding}</Label>
-                    <Select
-                      id="compounding"
-                      value={String(input.compoundsPerYear)}
-                      options={COMPOUNDING.map((option) => ({
-                        value: String(option.value),
-                        label: t.savings.compoundingOptions[option.key],
-                      }))}
-                      onChange={(e) => set('compoundsPerYear', Number(e.target.value))}
-                    />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+            </div>
+          </>
         </CalculatorForm>
       }
       results={
         <>
           {/* The headline figure on its own, the rest in one card. */}
           <ResultSummary
-            figures={(isUs ? usFigures : figures).slice(0, 1)}
+            figures={figures.slice(0, 1)}
             currency={result.currency}
             locale={locale}
           />
-          <ResultSummary
-            combined
-            figures={(isUs ? usFigures : figures).slice(1)}
-            currency={result.currency}
-            locale={locale}
-            footer={
-              isUs && (
-                <p
-                  className={
-                    usesOwnDeposit && result.reachesTarget
-                      ? 'rounded-md bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300'
-                      : usesOwnDeposit
-                        ? 'rounded-md bg-amber-400/10 px-3 py-2 text-xs text-amber-200'
-                        : 'rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground'
-                  }
-                >
-                  {usStatus}
-                </p>
-              )
-            }
-          />
+          <ResultSummary combined figures={figures.slice(1)} currency={result.currency} locale={locale} />
           {/* The growth chart sits with the figures, filling the column beside the form. */}
           <div className={CHART_PANEL}>
             <GrowthChart

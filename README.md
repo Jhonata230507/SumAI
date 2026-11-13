@@ -1,4 +1,4 @@
-# SumAI
+# Suma
 
 Financial calculators that explain their own numbers, for Colombia, the United States and Canada.
 
@@ -134,6 +134,23 @@ the PMI tables, property tax by region and a postal-code-to-region lookup. The
 program fees in `countries/us.ts` are placeholders: verify them against current
 FHA, VA and USDA sources before launch.
 
+The **investment** estimator is the third, in
+`features/calculators/investment/estimator/` with `InvestmentEstimator.tsx` as its
+page: contribution frequencies, account types (how each is taxed), the duration
+bounds, estimated return, inflation and tax rates, the range band and the
+values "Try an example" fills in.
+
+The **savings** estimator is the fourth, in `features/calculators/savings/estimator/`
+with `SavingsEstimator.tsx` as its page: contribution frequencies, how rates are
+quoted (APY or APR) and the compounding choices, duration bounds, how far "How
+long?" looks before calling a goal out of reach, and the estimated APY and
+inflation.
+
+The **debt payoff** planner is the fifth, in `features/calculators/debt-payoff/estimator/`
+with `DebtPlanner.tsx` as its page: the most debts the list takes, how many years the
+simulation runs before it says a plan never pays off, and the "Try an example" debts.
+It always runs avalanche and snowball, plus a minimums-only baseline.
+
 **Add a loan type** that works the same way (a price, a down payment, a
 monthly payment): copy the `estimator/` folder pattern for it, reuse
 `annuityFactor` from `calculate.ts`, and keep the rules:
@@ -159,4 +176,4 @@ monthly payment): copy the `estimator/` folder pattern for it, reuse
 
 ## Disclaimer
 
-SumAI provides general financial information and estimates, not financial advice. Rates shown are illustrative and are not offers of credit.
+Suma provides general financial information and estimates, not financial advice. Rates shown are illustrative and are not offers of credit.

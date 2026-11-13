@@ -10,7 +10,7 @@ import { useI18n } from '@/lib/i18n/client'
 /**
  * Footer, after a "brand sign-off" reference: link columns on the left, the
  * logo and tagline on the right, then a soft glow rising from the bottom edge
- * with a pill call to action floating over a giant, cropped "SumAI".
+ * with a pill call to action floating over a giant, cropped "Suma".
  */
 export function Footer() {
   const { t } = useI18n()
@@ -26,6 +26,7 @@ export function Footer() {
     { href: '/about', label: t.footer.about },
     { href: '/how-it-works', label: t.nav.howItWorks },
     { href: '/pricing', label: t.nav.pricing },
+    { href: '/privacy', label: t.footer.privacy },
   ]
 
   return (
@@ -65,7 +66,7 @@ export function Footer() {
               height={24}
               className="h-6 w-auto brightness-0 invert"
             />
-            SumAI
+            Suma
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground lg:ml-auto lg:max-w-[16rem]">
             {t.footer.tagline}
@@ -75,7 +76,7 @@ export function Footer() {
 
       <div className="mx-auto max-w-6xl px-4 pt-12 text-center text-xs leading-relaxed text-muted-foreground/80 sm:px-6 lg:px-8">
         <p className="mx-auto max-w-3xl">{t.footer.disclaimer}</p>
-        <p className="mt-3">© {new Date().getFullYear()} SumAI</p>
+        <p className="mt-3">© {new Date().getFullYear()} Suma</p>
       </div>
 
       {/* Sign-off: a glow from the bottom, the CTA pill, and the cropped wordmark. */}
@@ -88,7 +89,7 @@ export function Footer() {
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -bottom-[0.22em] select-none text-center text-[clamp(6rem,22vw,18rem)] font-bold leading-none tracking-tighter text-white/[0.07]"
         >
-          SumAI
+          Suma
         </p>
 
         <div className="absolute inset-x-0 top-6 flex justify-center px-4">

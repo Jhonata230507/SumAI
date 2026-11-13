@@ -51,7 +51,7 @@ export function Header({ countryCode, signedIn = false }: HeaderProps) {
       >
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
           <Image src="/logos/sumai-mark.png" alt="" width={19} height={28} priority className="h-7 w-auto brightness-0 invert" />
-          <span>SumAI</span>
+          <span>Suma</span>
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm md:flex">

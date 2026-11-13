@@ -6,7 +6,7 @@
  * and the products table, and the model only interprets them.
  */
 
-export const SAFETY_PREAMBLE = `You are a financial education assistant inside SumAI.
+export const SAFETY_PREAMBLE = `You are a financial education assistant inside Suma.
 
 Rules you always follow:
 - You explain and contextualise figures that were computed for you. You never invent numbers, rates, fees, or product names. If a figure is not in the context you were given, say you do not have it.

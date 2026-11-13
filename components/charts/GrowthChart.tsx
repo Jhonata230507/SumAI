@@ -4,6 +4,7 @@ import { useId } from 'react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { useI18n } from '@/lib/i18n/client'
+import { cn } from '@/lib/utils/cn'
 import { AXIS_PROPS, CHART_INK, GRID_PROPS, TOOLTIP_STYLE, seriesColors } from './theme'
 import { ChartLegend } from './ChartLegend'
 import type { GrowthPoint } from '@/lib/calculations/compound-interest'
@@ -14,6 +15,9 @@ export interface GrowthChartProps {
   currency: CurrencyCode
   periodsPerYear?: number
   height?: number
+  /** Take the height its container gives it (at least a minimum) instead of a fixed one. */
+  fill?: boolean
+  className?: string
   caption?: string
 }
 
@@ -24,7 +28,15 @@ export interface GrowthChartProps {
  * showing them as separate lines would bury exactly the thing the chart exists
  * to make visible.
  */
-export function GrowthChart({ points, currency, periodsPerYear = 12, height = 300, caption }: GrowthChartProps) {
+export function GrowthChart({
+  points,
+  currency,
+  periodsPerYear = 12,
+  height = 300,
+  fill = false,
+  caption,
+  className,
+}: GrowthChartProps) {
   const { t } = useI18n()
   const colors = seriesColors('dark')
 
@@ -48,7 +60,7 @@ export function GrowthChart({ points, currency, periodsPerYear = 12, height = 30
   const id = useId()
 
   return (
-    <figure className="space-y-3">
+    <figure className={cn(fill ? 'flex h-full flex-col gap-3' : 'space-y-3', className)}>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <figcaption className="text-sm font-medium">{caption ?? t.charts.growthCaption}</figcaption>
         {/* Legend with where each band ends up, instead of a bare key under the chart. */}
@@ -62,74 +74,79 @@ export function GrowthChart({ points, currency, periodsPerYear = 12, height = 30
         )}
       </div>
 
-      <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={data} margin={{ top: 8, right: 28, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={`${id}-c`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={colors.primary} stopOpacity={0.55} />
-              <stop offset="1" stopColor={colors.primary} stopOpacity={0.12} />
-            </linearGradient>
-            <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={colors.tertiary} stopOpacity={0.5} />
-              <stop offset="1" stopColor={colors.tertiary} stopOpacity={0.1} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid {...GRID_PROPS} />
-
-          <XAxis
-            dataKey="x"
-            type="number"
-            domain={[data[0]?.x ?? 0, last?.x ?? 1]}
-            ticks={xTicks}
-            {...AXIS_PROPS}
-            // Clear of the $0 tick in the corner.
-            tickMargin={10}
-            padding={{ left: 10, right: 6 }}
-            tickFormatter={(x: number) => `${unit} ${x}`}
-          />
-          <YAxis
-            {...AXIS_PROPS}
-            width={72}
-            tickMargin={8}
-            domain={[0, yTicks.at(-1)!]}
-            ticks={yTicks}
-            tickFormatter={short}
-          />
-
-          <Tooltip
-            cursor={{ stroke: CHART_INK.dark.secondary, strokeOpacity: 0.35 }}
-            contentStyle={TOOLTIP_STYLE}
-            itemStyle={{ color: TOOLTIP_STYLE.color }}
-            formatter={(value: number, name: string) => [money(value), name]}
-            labelFormatter={(x, payload) => {
-              const balance = (payload?.[0]?.payload as { balance?: number } | undefined)?.balance
-              const when = `${yearly ? t.charts.year : t.charts.month} ${x}`
-              return balance !== undefined ? `${when} · ${t.common.total} ${money(balance)}` : when
-            }}
-          />
-
-          <Area
-            type="monotone"
-            dataKey="contributions"
-            name={t.charts.contributed}
-            stackId="balance"
-            stroke={colors.primary}
-            fill={`url(#${id}-c)`}
-            strokeWidth={2}
-            activeDot={{ r: 4, stroke: CHART_INK.dark.surface, strokeWidth: 2 }}
-          />
-          <Area
-            type="monotone"
-            dataKey="growth"
-            name={t.charts.growth}
-            stackId="balance"
-            stroke={colors.tertiary}
-            fill={`url(#${id}-g)`}
-            strokeWidth={2}
-            activeDot={{ r: 4, stroke: CHART_INK.dark.surface, strokeWidth: 2 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      {/* Filling: absolute inside a flexible box, so the chart never makes its parent taller. */}
+      <div className={fill ? 'relative min-h-32 flex-1' : undefined}>
+        <div className={fill ? 'absolute inset-0' : undefined}>
+          <ResponsiveContainer width="100%" height={fill ? '100%' : height}>
+            <AreaChart data={data} margin={{ top: 8, right: 28, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id={`${id}-c`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor={colors.primary} stopOpacity={0.55} />
+                  <stop offset="1" stopColor={colors.primary} stopOpacity={0.12} />
+                </linearGradient>
+                <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor={colors.tertiary} stopOpacity={0.5} />
+                  <stop offset="1" stopColor={colors.tertiary} stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid {...GRID_PROPS} />
+    
+              <XAxis
+                dataKey="x"
+                type="number"
+                domain={[data[0]?.x ?? 0, last?.x ?? 1]}
+                ticks={xTicks}
+                {...AXIS_PROPS}
+                // Clear of the $0 tick in the corner.
+                tickMargin={10}
+                padding={{ left: 10, right: 6 }}
+                tickFormatter={(x: number) => `${unit} ${x}`}
+              />
+              <YAxis
+                {...AXIS_PROPS}
+                width={72}
+                tickMargin={8}
+                domain={[0, yTicks.at(-1)!]}
+                ticks={yTicks}
+                tickFormatter={short}
+              />
+    
+              <Tooltip
+                cursor={{ stroke: CHART_INK.dark.secondary, strokeOpacity: 0.35 }}
+                contentStyle={TOOLTIP_STYLE}
+                itemStyle={{ color: TOOLTIP_STYLE.color }}
+                formatter={(value: number, name: string) => [money(value), name]}
+                labelFormatter={(x, payload) => {
+                  const balance = (payload?.[0]?.payload as { balance?: number } | undefined)?.balance
+                  const when = `${yearly ? t.charts.year : t.charts.month} ${x}`
+                  return balance !== undefined ? `${when} · ${t.common.total} ${money(balance)}` : when
+                }}
+              />
+    
+              <Area
+                type="monotone"
+                dataKey="contributions"
+                name={t.charts.contributed}
+                stackId="balance"
+                stroke={colors.primary}
+                fill={`url(#${id}-c)`}
+                strokeWidth={2}
+                activeDot={{ r: 4, stroke: CHART_INK.dark.surface, strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="growth"
+                name={t.charts.growth}
+                stackId="balance"
+                stroke={colors.tertiary}
+                fill={`url(#${id}-g)`}
+                strokeWidth={2}
+                activeDot={{ r: 4, stroke: CHART_INK.dark.surface, strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </figure>
   )
 }

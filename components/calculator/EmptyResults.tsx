@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { Calculator } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n/client'
@@ -7,9 +8,9 @@ import { useI18n } from '@/lib/i18n/client'
 /**
  * Stands in for the results until the user has filled in their numbers: the
  * calculators open with empty fields, and there is nothing honest to show
- * before then.
+ * before then. An action (e.g. "Try an example") lets the user see a result first.
  */
-export function EmptyResults() {
+export function EmptyResults({ action }: { action?: ReactNode }) {
   const { t } = useI18n()
 
   return (
@@ -20,6 +21,7 @@ export function EmptyResults() {
         </span>
         <h2 className="mt-5 text-xl font-semibold tracking-tight">{t.calculatorForm.emptyTitle}</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.calculatorForm.emptyBody}</p>
+        {action && <div className="mt-6">{action}</div>}
       </CardContent>
     </Card>
   )

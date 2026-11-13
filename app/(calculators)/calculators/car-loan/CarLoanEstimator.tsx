@@ -118,8 +118,8 @@ function toInput(form: FormState): CarLoanEstimateInput {
  * features/calculators/car-loan/estimator). Two modes: from a vehicle price to
  * a monthly payment, or from a monthly budget to the most it can borrow and
  * the price that fits. Everything shown comes from `estimateCarLoan`; this
- * component only collects inputs and formats results. Shared fields (down
- * payment, trade-in, term, APR, condition) carry over when the mode changes.
+ * component only collects inputs and formats results. Changing the mode starts
+ * from an empty form.
  */
 export function CarLoanEstimator({ country, config, header, related }: CarLoanEstimatorProps) {
   const { t } = useI18n()
@@ -202,7 +202,12 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
             label={e.modeLabel}
             value={form.mode}
             options={(['price', 'budget'] as const).map((mode) => ({ value: mode, label: e.modes[mode] }))}
-            onChange={(mode) => set('mode', mode)}
+            // A new mode starts from an empty form.
+            onChange={(mode) => {
+              if (mode === form.mode) return
+              setForm({ ...blankForm(), mode })
+              setEstimatesOpen(false)
+            }}
           />
 
           <div className="space-y-1.5">

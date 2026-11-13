@@ -76,7 +76,7 @@ const fromField = (value: number) => (Number.isFinite(value) ? value : null)
  * features/calculators/mortgage/estimator). Two modes: from a home price to the
  * monthly cost, or from a monthly budget to the price that fits. Everything
  * shown comes from `estimateMortgage`; this component collects the inputs and
- * formats the results. Fields shared by both modes carry over when it changes.
+ * formats the results. Changing the mode starts from an empty form.
  */
 export function MortgageEstimator({ country, config, header, related }: MortgageEstimatorProps) {
   const { t } = useI18n()
@@ -222,7 +222,13 @@ export function MortgageEstimator({ country, config, header, related }: Mortgage
             label={e.modeLabel}
             value={input.mode}
             options={(['price', 'budget'] as const).map((mode) => ({ value: mode, label: e.modes[mode] }))}
-            onChange={(mode) => change({ mode })}
+            // A new mode starts from an empty form.
+            onChange={(mode) => {
+              if (mode === input.mode) return
+              setInput({ ...blankInput(config), mode })
+              setWhatIf(null)
+              setEstimatesOpen(false)
+            }}
           />
 
           {priceMode ? (

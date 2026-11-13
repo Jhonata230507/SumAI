@@ -9,7 +9,7 @@ import type { Dictionary } from '@/lib/i18n'
 import type { CountryConfig } from '@/types/country'
 
 /**
- * "Why SumAI" — a tabbed showcase of the three things the product does for
+ * "Why Suma" — a tabbed showcase of the three things the product does for
  * the user: finds the lowest rate, compares every credit for the best fit,
  * and checks where they qualify before they apply.
  *

@@ -1,12 +1,12 @@
 ---
 title: Frequently asked questions
-description: How SumAI calculates, what it assumes, and what it does not do.
+description: How Suma calculates, what it assumes, and what it does not do.
 updated: 2026-09-29
 ---
 
 ## Is this financial advice?
 
-No. SumAI gives general information and estimates based on the numbers you enter. It does not know your full situation and does not recommend what you should do.
+No. Suma gives general information and estimates based on the numbers you enter. It does not know your full situation and does not recommend what you should do.
 
 ## How accurate are the results?
 

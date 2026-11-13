@@ -13,9 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-    title: { default: t.meta.siteTitle, template: '%s · SumAI' },
+    title: { default: t.meta.siteTitle, template: '%s · Suma' },
     description: t.meta.siteDescription,
-    openGraph: { type: 'website', siteName: 'SumAI' },
+    openGraph: { type: 'website', siteName: 'Suma' },
   }
 }
 

@@ -35,6 +35,8 @@ export interface CurrencyInputProps {
   placeholder?: string
   /** Shown at the right of the label row, e.g. a unit switch. */
   adornment?: React.ReactNode
+  /** The label is drawn by the caller (e.g. over a row of controls); it stays for screen readers. */
+  labelHidden?: boolean
   className?: string
 }
 
@@ -61,6 +63,7 @@ export function CurrencyInput({
   optional = false,
   placeholder,
   adornment,
+  labelHidden = false,
 }: CurrencyInputProps) {
   const [focused, setFocused] = React.useState(false)
   const [draft, setDraft] = React.useState('')
@@ -101,7 +104,7 @@ export function CurrencyInput({
     // flex-1 on the label row: in a two-column grid both fields stretch to the
     // taller one, and the inputs stay level even if one label wraps.
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <div className="flex flex-1 items-end justify-between gap-2">
+      <div className={cn('flex flex-1 items-end justify-between gap-2', labelHidden && 'sr-only')}>
         <div className="flex items-end gap-1.5">
           <Label htmlFor={id}>{label}</Label>
           {hint && <InfoTip content={hint} id={`${id}-hint`} />}

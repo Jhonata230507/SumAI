@@ -68,3 +68,8 @@ export const PayoffPlanner = dynamic(() => import('./PayoffPlanner').then((m) =>
   ssr: false,
   loading: () => <ChartSkeleton height={420} />,
 })
+
+export const DebtBalanceChart = dynamic(() => import('./DebtBalanceChart').then((m) => m.DebtBalanceChart), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={380} />,
+})

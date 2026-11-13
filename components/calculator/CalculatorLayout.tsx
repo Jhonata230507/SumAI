@@ -40,6 +40,8 @@ export interface CalculatorLayoutProps {
    * explanation and everything below make way for a prompt to enter the numbers.
    */
   ready?: boolean
+  /** Shown in the empty state, e.g. a button that fills the form with an example. */
+  emptyAction?: ReactNode
   className?: string
 }
 
@@ -67,6 +69,7 @@ export function CalculatorLayout({
   formFit = false,
   formSticky = false,
   ready = true,
+  emptyAction,
 }: CalculatorLayoutProps) {
   const detailBlock = ready && detail && <Reveal className="space-y-8">{detail}</Reveal>
 
@@ -91,7 +94,7 @@ export function CalculatorLayout({
                 {aside}
               </>
             ) : (
-              <EmptyResults />
+              <EmptyResults action={emptyAction} />
             )}
           </Reveal>
         </div>
@@ -149,7 +152,7 @@ export function CalculatorLayout({
             delay={160}
             className="order-1 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-span-2 xl:row-span-1 [&>*]:h-full"
           >
-            <EmptyResults />
+            <EmptyResults action={emptyAction} />
           </Reveal>
         )}
 

@@ -33,7 +33,7 @@ export const es: Dictionary = {
   },
 
   meta: {
-    siteTitle: 'SumAI — Calculadoras financieras que se explican solas',
+    siteTitle: 'Suma — Calculadoras financieras que se explican solas',
     siteDescription:
       'Calculadoras de crédito, hipoteca, vehículo, ahorro, inversión y pago de deudas, con una explicación clara de cada resultado.',
   },
@@ -66,18 +66,19 @@ export const es: Dictionary = {
 
   footer: {
     tagline: 'Calculadoras financieras que explican sus propios números.',
-    ctaLine: 'Tú decides. SumAI hace las cuentas.',
+    ctaLine: 'Tú decides. Suma hace las cuentas.',
     ctaButton: 'Probar una calculadora',
     calculators: 'Calculadoras',
     compare: 'Comparar',
     company: 'Empresa',
     about: 'Nosotros',
+    privacy: 'Política de privacidad',
     mortgages: 'Créditos hipotecarios',
     carLoans: 'Créditos de vehículo',
     personalLoans: 'Créditos de libre inversión',
     savingsAccounts: 'Cuentas de ahorros',
     disclaimer:
-      'SumAI ofrece información financiera general y estimaciones, no asesoría financiera. Las tasas son ilustrativas y no constituyen ofertas de crédito. Las cifras dependen de los datos que ingreses y de los supuestos indicados junto a cada resultado.',
+      'Suma ofrece información financiera general y estimaciones, no asesoría financiera. Las tasas son ilustrativas y no constituyen ofertas de crédito. Las cifras dependen de los datos que ingreses y de los supuestos indicados junto a cada resultado.',
   },
 
   calculators: {
@@ -178,9 +179,9 @@ export const es: Dictionary = {
     browse: 'Ver calculadoras',
     scrollHint: 'Desliza para explorar',
     advantages: {
-      titleLead: 'Por qué SumAI',
+      titleLead: 'Por qué Suma',
       titleEmphasis: 'juega a tu favor.',
-      tablist: 'Por qué SumAI',
+      tablist: 'Por qué Suma',
       previous: 'Razón anterior',
       next: 'Siguiente razón',
       position: (current: number, total: number) => `${current} de ${total}`,
@@ -266,7 +267,7 @@ export const es: Dictionary = {
         {
           name: 'Valentina Ortiz',
           role: 'Gerente comercial',
-          quote: 'SumAI me mostró un crédito dos puntos más barato que el que me ofrecía mi banco, y me explicó por qué.',
+          quote: 'Suma me mostró un crédito dos puntos más barato que el que me ofrecía mi banco, y me explicó por qué.',
         },
         {
           name: 'Sofía Ramírez',
@@ -298,11 +299,11 @@ export const es: Dictionary = {
 
   about: {
     metaTitle: 'Nosotros',
-    metaDescription: 'Por qué existe SumAI y las reglas que sigue.',
-    title: 'Sobre SumAI',
+    metaDescription: 'Por qué existe Suma y las reglas que sigue.',
+    title: 'Sobre Suma',
     paragraphs: [
       'La mayoría de las calculadoras financieras te dan un número y ya. Ves la cuota mensual, pero no por qué es esa, qué supone ni qué la haría cambiar.',
-      'SumAI parte de la idea contraria. Cada cálculo muestra sus cuentas. Cada resultado viene con los supuestos que lo explican. Y cuando quieres entender qué significa una cifra para ti, puedes preguntar — y recibir una respuesta basada solo en los números que tienes enfrente.',
+      'Suma parte de la idea contraria. Cada cálculo muestra sus cuentas. Cada resultado viene con los supuestos que lo explican. Y cuando quieres entender qué significa una cifra para ti, puedes preguntar — y recibir una respuesta basada solo en los números que tienes enfrente.',
     ],
     rulesTitle: 'Las reglas que seguimos',
     rules: [
@@ -318,35 +319,77 @@ export const es: Dictionary = {
 
   howItWorks: {
     metaTitle: 'Cómo funciona',
-    metaDescription: 'Cómo SumAI calcula, explica y compara.',
-    title: 'Cómo funciona',
-    subtitle: 'Cinco pasos, y los tres primeros no necesitan cuenta.',
+    metaDescription: 'Cómo Suma convierte tus números en una comparación clara y encuentra ofertas que te sirven.',
+    title: 'De tus números a una decisión',
+    subtitle: 'Cinco pasos. Los cuatro primeros no necesitan cuenta, y todas las calculadoras son gratis.',
+    stepLabel: (n: number) => `Paso ${n}`,
     steps: [
       {
-        title: 'Ingresa tus números',
-        body: 'Elige una calculadora y llena lo que sabes. Los resultados se actualizan mientras escribes — no hay botón que buscar.',
+        title: 'Empieza por lo que sabes',
+        body: 'Un precio, un presupuesto mensual o una meta: cada calculadora pregunta a tu manera. ¿No sabes qué escribir? Prueba un ejemplo y mira los resultados de inmediato.',
+        tag: 'Sin registro',
       },
       {
         title: 'Mira el panorama completo',
-        body: 'Más allá de la cuota: el total de intereses, el plan de pagos y a dónde va realmente cada pago.',
+        body: 'Más allá de la cuota: el total de intereses, cuánto vale en dinero de hoy, la fecha en que terminas y a dónde va cada pago. Los resultados cambian mientras escribes.',
+        tag: 'Resultados al instante',
       },
       {
-        title: 'Prueba escenarios',
-        body: 'Con un clic ves qué cambiaría con un plazo más corto, una tasa menor o un abono extra cada mes — con sus pros y contras.',
+        title: 'Compara tus opciones',
+        body: 'Qué cambiaría con un plazo más corto, una tasa menor o un abono extra cada mes. Avalancha frente a bola de nieve. Tu plan frente a pagar solo los mínimos. Con sus pros y contras.',
+        tag: 'Lado a lado',
       },
       {
-        title: 'Pregunta qué significa',
-        body: 'Recibe una lectura clara de tu resultado. La explicación usa solo las cifras calculadas para ti.',
+        title: 'Encuentra ofertas que te sirvan',
+        body: 'Prestamistas y cuentas ordenados para tu monto y plazo, por tasa y costos, indicando si es probable que califiques.',
+        tag: 'Ordenadas para ti',
       },
       {
-        title: 'Guarda y compara',
+        title: 'Guarda y haz seguimiento',
         body: 'Inicia sesión para guardar escenarios, compararlos lado a lado y seguir tus metas en el tiempo.',
+        tag: 'Cuenta gratis',
+      },
+    ],
+    visuals: {
+      modes: { price: 'Sé el precio', budget: 'Sé mi presupuesto' },
+      price: 'Valor de la vivienda',
+      down: 'Cuota inicial',
+      example: 'Probar un ejemplo',
+      payment: 'Cuota mensual',
+      interest: 'Total de intereses',
+      paidOff: 'Terminas en',
+      avalanche: 'Avalancha',
+      snowball: 'Bola de nieve',
+      minimums: 'Solo mínimos',
+      bestRate: 'Mejor tasa',
+      qualify: 'Es probable que califiques',
+      perMonth: '/mes',
+      saved: 'Escenarios guardados',
+      goal: 'Fondo de emergencia',
+      ofGoal: (pct: string) => `${pct} de la meta`,
+    },
+    principlesTitle: 'Con qué puedes contar',
+    principles: [
+      {
+        title: 'Cada estimación está señalada',
+        body: 'Si dejas un campo vacío usamos una estimación declarada, y lo indicamos junto al resultado.',
+      },
+      {
+        title: 'Las cuentas están a la vista',
+        body: 'Totales, gráficos y calendarios salen de un mismo cálculo, hasta el detalle mes a mes.',
+      },
+      {
+        title: 'Hecho para tu mercado',
+        body: 'Las tasas, los impuestos y las costumbres de crédito siguen el país que elijas.',
       },
     ],
     rateNoteTitle: 'Una nota sobre las tasas',
     rateNoteBody:
       'Una tasa del 12% no significa lo mismo en todas partes. En Colombia los bancos expresan la tasa efectiva anual (E.A.), que ya incluye la capitalización. En Estados Unidos se expresa una tasa nominal anual capitalizada mensualmente, que cuesta un poco más de lo que parece. Hacemos la conversión correcta para tu mercado, y cada tasa que mostramos indica de qué tipo es.',
+    ctaTitle: 'Haz tus cuentas',
+    ctaBody: 'Elige una calculadora, o prueba un ejemplo para ver cómo funciona.',
     start: 'Empieza con una calculadora',
+    compare: 'Comparar tasas',
   },
 
   pricing: {
@@ -832,6 +875,53 @@ export const es: Dictionary = {
     stronger: 'Mayor',
     doubling: (years: string) =>
       `Con esta rentabilidad neta, el dinero se duplica más o menos cada ${years} años.`,
+    // El estimador por configuración (por ahora EE. UU.): en qué se convierte un plan, o qué exige una meta.
+    estimator: {
+      modeLabel: '¿Qué quieres saber?',
+      modes: { grow: '¿Cuánto tendré?', goal: '¿Cuánto debo ahorrar?' },
+      target: 'Monto objetivo',
+      targetHint: 'El saldo que quieres alcanzar al final.',
+      returnHint: (rate: string) =>
+        `Los promedios de largo plazo no son garantías. Si lo dejas vacío, usamos ${rate}, un promedio de largo plazo para una mezcla diversificada de acciones y bonos.`,
+      accountType: 'Tipo de cuenta',
+      accountTypes: {
+        unspecified: 'Sin especificar',
+        taxable: 'Cuenta de corretaje gravable',
+        deferred: 'Con impuesto diferido (IRA tradicional, 401(k))',
+        free: 'Libre de impuestos (Roth IRA, Roth 401(k))',
+      },
+      accountHint: 'Cómo tributa la cuenta decide lo que te queda. Sin especificar deja fuera los impuestos.',
+      freeNote: 'Los retiros calificados están libres de impuestos, así que no se aplica ninguno.',
+      taxRate: { taxable: 'Impuesto sobre las ganancias', deferred: 'Impuesto sobre los retiros' },
+      taxHint: {
+        taxable: (rate: string) =>
+          `Se cobra sobre las ganancias al vender. Si lo dejas vacío, usamos ${rate}, la tasa más común de ganancias de capital a largo plazo.`,
+        deferred: (rate: string) =>
+          `Se cobra sobre cada retiro, como ingreso. Si lo dejas vacío, usamos ${rate}, un tramo federal común.`,
+      },
+      increase: 'Aumento anual del aporte',
+      increaseHint: 'Mucha gente sube sus aportes a medida que crece su ingreso. Se aplica una vez al año.',
+      timing: 'Momento del aporte',
+      timings: { start: 'Inicio', end: 'Fin' },
+      timingHint: 'Si cada aporte entra al inicio o al final de su periodo. Al inicio, crece un periodo más.',
+      example: 'Probar un ejemplo',
+      afterTax: 'Después de impuestos',
+      afterTaxHint: {
+        taxable: (tax: string) => `Después de ${tax} de impuesto sobre las ganancias.`,
+        deferred: (tax: string) => `Después de ${tax} de impuesto sobre los retiros.`,
+        free: 'Una cuenta libre de impuestos: nada que pagar en retiros calificados.',
+      },
+      growth: 'Crecimiento',
+      growthHint: 'Lo que ganó el dinero por encima de lo que aportaste.',
+      needed: (frequency: string) => `Necesitas invertir · ${frequency.toLowerCase()}`,
+      neededDetail: (target: string, years: number) => `Para llegar a ${target} en ${years} años.`,
+      neededRising: (rate: string) => `Subiendo ${rate} al año.`,
+      alreadyThere: 'Tu inversión inicial ya alcanza la meta con este rendimiento.',
+      targetLabel: 'Meta',
+      putIn: 'Aportarás',
+      growthDoes: 'El crecimiento suma',
+      targetToday: 'Meta en dinero de hoy',
+    },
     us: {
       initial: 'Inversión inicial',
       contribution: 'Aporte recurrente',
@@ -872,6 +962,49 @@ export const es: Dictionary = {
     youDeposit: 'Tus depósitos',
     interestEarned: 'Intereses ganados',
     chartCaption: 'Depósitos e intereses en el tiempo',
+    // El estimador por configuración (por ahora EE. UU.): el aporte, el tiempo o el saldo.
+    estimator: {
+      findOut: 'Averiguar',
+      modes: { contribution: 'Cuánto ahorrar', time: 'Cuánto tarda', balance: 'Cuánto tendré' },
+      goalOptionalHint: 'Aquí es opcional. Agrégala para ver si este plan llega.',
+      rate: 'Tasa de interés',
+      basis: 'Tasa expresada como',
+      bases: { apy: 'APY', apr: 'APR' },
+      rateHint: {
+        apy: (rate: string) =>
+          `El rendimiento anual que anuncian los bancos, con la capitalización incluida. Si la dejas vacía, usamos un APY estimado de ${rate}; las tasas varían mucho según el banco y la cuenta.`,
+        apr: (rate: string) =>
+          `Una tasa anual nominal, antes de capitalizar: elige cada cuánto capitaliza en Mejorar mis estimaciones. Si la dejas vacía, usamos un APY estimado de ${rate}.`,
+      },
+      compoundingHint: 'Solo cuenta con una APR. Un APY ya incluye la capitalización.',
+      todaysDollars: 'La meta está en dólares de hoy',
+      todaysDollarsHint:
+        'Sube la meta según la inflación supuesta hasta la fecha en que la alcances, para que veas la cifra que de verdad necesitarás.',
+      tax: 'Impuesto estimado sobre intereses',
+      taxHint:
+        'Los intereses de una cuenta de ahorros normal suelen tributar como ingreso ordinario. El resultado usa la tasa después de este impuesto.',
+      startDate: 'Fecha de inicio',
+      startDateHint: 'Mes en que empiezas. Convierte el tiempo hasta tu meta en una fecha.',
+      neededFuture: (amount: string) => `Eso son ${amount} en dólares futuros.`,
+      alreadyThere: 'Tu saldo inicial alcanza esta meta solo con los intereses, así que vas bien.',
+      time: 'Tiempo para alcanzar tu meta',
+      timeDetail: (contribution: string, frequency: string) => `Ahorrando ${contribution} ${frequency.toLowerCase()}.`,
+      timeNoContribution: 'Solo con los intereses.',
+      reachedOn: (date: string) => `La alcanzas en ${date}.`,
+      endsOn: (date: string) => `En ${date}.`,
+      immediate: 'Ya',
+      immediateDetail: 'Tu saldo inicial ya cubre la meta.',
+      unreachable:
+        'Esta meta no se alcanza así: nada hace crecer el saldo lo suficiente. Agrega o sube un aporte, o revisa la tasa y la inflación.',
+      netYield: 'Rendimiento neto',
+      netYieldHint: 'Lo que rinde el saldo en un año, después de la capitalización y del impuesto sobre intereses.',
+      endingBalance: 'Saldo final',
+      inTodaysMoney: 'En dinero de hoy',
+      inTodaysMoneyHint: 'El saldo final ajustado por inflación: lo que compraría hoy.',
+      goalFuture: 'Meta en dólares futuros',
+      goalFutureHint: 'Tu meta ajustada por inflación hasta la fecha en que la alcances: la cifra que de verdad necesitarás.',
+      interestAfterTaxHint: 'Después del impuesto estimado sobre intereses.',
+    },
     us: {
       initialBalance: 'Saldo inicial de ahorro',
       goal: 'Meta de ahorro',
@@ -896,6 +1029,70 @@ export const es: Dictionary = {
   },
 
   debtPayoff: {
+    // El planificador por configuración (por ahora EE. UU.): avalancha y bola de nieve lado a lado, frente a pagar solo los mínimos.
+    planner: {
+      rate: 'Tasa de interés (APR)',
+      rateHint: 'La encuentras en tu extracto.',
+      minimumBelowInterest: 'Este pago no cubre los intereses. El saldo va a crecer.',
+      maxDebts: (n: number) => `Puedes agregar hasta ${n} deudas.`,
+      amount: 'Monto mensual para deudas',
+      amountUnit: 'Ingresar el monto como',
+      amountUnits: { total: 'Total', extra: 'Extra' },
+      amountHint: {
+        total: 'Todo lo que puedes destinar a tus deudas cada mes, mínimos incluidos.',
+        extra: 'Lo que puedes pagar cada mes además de los mínimos.',
+      },
+      minimumsTotal: (amount: string) => `Tus mínimos suman ${amount}.`,
+      belowMinimums: (amount: string) => `Tus mínimos suman ${amount}. Sube el monto para cubrirlos.`,
+      totalIs: (amount: string) => `${amount} al mes en total.`,
+      oneTime: 'Pago extra único',
+      oneTimeHint: 'Como una devolución de impuestos o una bonificación. Se hace el primer mes y va a la deuda prioritaria.',
+      startDate: 'Fecha de inicio',
+      startDateHint: 'Mes de tu primer pago. Convierte los resultados en fechas.',
+      example: 'Probar un ejemplo',
+      exampleNames: { card: 'Tarjeta de crédito', store: 'Tarjeta de almacén', student: 'Crédito estudiantil' } as Record<
+        string,
+        string
+      >,
+      showFor: 'Ver detalles de',
+      strategies: {
+        avalanche: { name: 'Avalancha', rule: 'Mayor tasa primero', benefit: 'Pagar menos intereses en total' },
+        snowball: { name: 'Bola de nieve', rule: 'Menor saldo primero', benefit: 'Saldar deudas completas antes' },
+      },
+      debtFree: 'Libre de deudas',
+      never: 'Nunca',
+      timeToPayOff: 'Tiempo para pagar',
+      totalInterest: 'Total de intereses',
+      totalPaid: 'Total pagado',
+      savedVsMinimums: 'Ahorro frente a solo mínimos',
+      saved: (interest: string, time: string) => `${interest} en intereses, ${time} antes`,
+      savedNoTime: (interest: string) => `${interest} en intereses`,
+      baseline: (time: string, interest: string) => `Pagando solo los mínimos: ${time} y ${interest} en intereses.`,
+      baselineNever: 'Pagando solo los mínimos, estas deudas nunca se saldan.',
+      verdictInterest: (amount: string) => `La avalancha cuesta ${amount} menos en intereses`,
+      verdictEarlier: (time: string) => ` y termina ${time} antes.`,
+      verdictSameFinish: ' y termina el mismo mes.',
+      verdictFirst: (time: string) => ` La bola de nieve salda tu primera deuda ${time} antes.`,
+      verdictSame: 'Con estas deudas, los dos métodos dan el mismo resultado.',
+      verdictSingle: 'Con una sola deuda, los dos métodos dan el mismo resultado.',
+      neverPays: 'Con este monto no se saldan estas deudas. Sube el monto mensual.',
+      payoffOrder: 'Orden de pago',
+      colDebt: 'Deuda',
+      colPaidOff: 'Saldada',
+      colInterest: 'Intereses pagados',
+      monthN: (n: number) => `Mes ${n}`,
+      chartTitle: 'Saldo total en el tiempo',
+      chartViews: { total: 'Ambos métodos', perDebt: 'Por deuda' },
+      chartView: 'Vista del gráfico',
+      minimumsOnly: 'Solo mínimos',
+      schedule: 'Mes a mes',
+      colMonth: 'Mes',
+      colPayment: 'Pago',
+      colScheduleInterest: 'Intereses',
+      colBalance: 'Saldo pendiente',
+      notes:
+        'Estimaciones. Las tasas se tratan como tasas anuales capitalizadas mensualmente; las tarjetas de crédito suelen capitalizar a diario. Los mínimos se mantienen fijos; en las tarjetas suelen bajar a medida que baja el saldo, así que el calendario real puede variar.',
+    },
     formTitle: 'Tus deudas',
     debtNameLabel: (i: number) => `Nombre de la deuda ${i}`,
     remove: (name: string) => `Eliminar ${name}`,
