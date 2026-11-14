@@ -24,6 +24,8 @@ export interface TermInputProps {
   allowEmpty?: boolean
   /** Shown in the empty field, e.g. an example term. */
   placeholder?: string
+  /** Shows the term in the other unit inside the field, beside the unit, so typing never adds a line. */
+  inlineNote?: boolean
 }
 
 /**
@@ -44,6 +46,7 @@ export function TermInput({
   className,
   allowEmpty = true,
   placeholder,
+  inlineNote = false,
 }: TermInputProps) {
   const { t, locale } = useI18n()
   const [unit, setUnit] = React.useState<Unit>(defaultUnit)
@@ -104,7 +107,10 @@ export function TermInput({
           max={max / perUnit}
           value={display}
           placeholder={placeholder}
-          className="pr-16 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className={cn(
+            inlineNote && note ? 'pr-36' : 'pr-16',
+            'tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+          )}
           onChange={(event) => {
             setDraft(event.target.value)
             if (allowEmpty && event.target.value.trim() === '') {
@@ -120,10 +126,11 @@ export function TermInput({
         />
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
           {t.common.termUnits[unit].toLowerCase()}
+          {inlineNote && note && <span className="text-muted-foreground/70"> · {note}</span>}
         </span>
       </div>
 
-      {note && <p className="text-xs text-muted-foreground">= {note}</p>}
+      {note && !inlineNote && <p className="text-xs text-muted-foreground">= {note}</p>}
     </div>
   )
 }

@@ -30,6 +30,8 @@ import { UsLoanFields } from './UsLoanFields'
 import { DebtToIncome } from '@/components/calculator/DebtToIncome'
 import { estimatePersonalLoanRate } from '@/features/calculators/loan/us'
 import { bandToScore } from '@/features/calculators/mortgage/us'
+import { getLoanConfig } from '@/features/calculators/loan/estimator/config'
+import { LoanEstimator } from './LoanEstimator'
 
 export interface LoanCalculatorProps {
   country: CountryConfig
@@ -55,7 +57,20 @@ const US_FALLBACK = (input: LoanSchema) => ({
   annualRate: estimatePersonalLoanRate(getBenchmarks('us'), input.creditBand),
 })
 
-export function LoanCalculator({ country, initial, header, related }: LoanCalculatorProps) {
+/**
+ * Countries with an estimator config (Colombia) get the config-driven estimator;
+ * the others keep the calculator below.
+ */
+export function LoanCalculator(props: LoanCalculatorProps) {
+  const config = getLoanConfig(props.country.code)
+  return config ? (
+    <LoanEstimator country={props.country} config={config} header={props.header} related={props.related} />
+  ) : (
+    <ClassicLoanCalculator {...props} />
+  )
+}
+
+function ClassicLoanCalculator({ country, initial, header, related }: LoanCalculatorProps) {
   const { t } = useI18n()
   const isCo = country.code === 'co'
   const isUs = country.code === 'us'

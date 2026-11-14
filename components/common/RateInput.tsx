@@ -67,6 +67,10 @@ export interface RateInputProps {
   fallbackNote?: string
   /** Shows a quiet "Optional" at the right of the label. */
   optional?: boolean
+  /** Colombia: the second basis offered, monthly (M.V.) or nominal annual compounded monthly (N.M.V.). */
+  monthlyBasis?: 'mv' | 'nmv'
+  /** Shown first in the field's tooltip. */
+  hint?: string
 }
 
 /**
@@ -90,6 +94,8 @@ export function RateInput({
   fallback,
   fallbackNote,
   optional = false,
+  monthlyBasis = 'mv',
+  hint,
 }: RateInputProps) {
   const { t } = useI18n()
   const [basis, setBasis] = useRateBasis()
@@ -107,24 +113,37 @@ export function RateInput({
         allowEmpty={allowEmpty}
         optional={optional}
         placeholder={fallback !== undefined ? (fallback * 100).toFixed(2) : undefined}
-        hint={!Number.isFinite(value) && fallback !== undefined ? fallbackNote : undefined}
+        hint={
+          [hint, !Number.isFinite(value) && fallback !== undefined ? fallbackNote : undefined]
+            .filter(Boolean)
+            .join(' ') || undefined
+        }
       />
     )
   }
 
   const monthly = basis === 'mv'
-  const shown = monthly ? effectiveToPeriodic(value, 12) : value
-  const other = monthly ? value : effectiveToPeriodic(value, 12)
-  const otherLabel = monthly ? t.rateInput.effectiveAnnual : t.rateInput.monthly
+  // N.M.V. is twelve times the monthly rate: (1 + E.A.) = (1 + N.M.V./12)^12.
+  const nominal = monthlyBasis === 'nmv'
+  const scale = nominal ? 12 : 1
+  const monthlyLabel = nominal ? t.rateInput.nominalMonthly : t.rateInput.monthly
+  const toMonthly = (effective: number) => effectiveToPeriodic(effective, 12) * scale
+  const shown = monthly ? toMonthly(value) : value
+  const other = monthly ? value : toMonthly(value)
+  const otherLabel = monthly ? t.rateInput.effectiveAnnual : monthlyLabel
+  // M.V. rates are small and need three decimals; N.M.V. reads like an annual rate.
+  const decimals = monthly && !nominal ? 3 : 2
   const usingFallback = !Number.isFinite(value) && fallback !== undefined
   const placeholder =
-    fallback !== undefined
-      ? ((monthly ? effectiveToPeriodic(fallback, 12) : fallback) * 100).toFixed(monthly ? 3 : 2)
-      : undefined
+    fallback !== undefined ? ((monthly ? toMonthly(fallback) : fallback) * 100).toFixed(decimals) : undefined
   const equivalent = Number.isFinite(value)
-    ? t.rateInput.equivalent(formatPercent(other, country.locale, monthly ? 2 : 3), otherLabel)
+    ? t.rateInput.equivalent(formatPercent(other, country.locale, monthly || nominal ? 2 : 3), otherLabel)
     : ''
-  const basisHint = monthly ? t.rateInput.monthlyHint : t.rateInput.effectiveAnnualHint
+  const basisHint = !monthly
+    ? t.rateInput.effectiveAnnualHint
+    : nominal
+      ? t.rateInput.nominalMonthlyHint
+      : t.rateInput.monthlyHint
 
   return (
     <PercentageInput
@@ -132,20 +151,20 @@ export function RateInput({
       key={basis}
       id={id}
       label={label ?? t.rateInput.label}
-      hint={[compact ? `${basisHint} ${equivalent}.` : basisHint, usingFallback ? fallbackNote : undefined]
+      hint={[hint, compact ? `${basisHint} ${equivalent}.` : basisHint, usingFallback ? fallbackNote : undefined]
         .filter(Boolean)
         .join(' ')}
       value={shown}
       // Monthly rates are small; three decimals keep them meaningful (1.281%).
-      decimals={monthly ? 3 : 2}
-      step={monthly ? 0.01 : 0.05}
-      max={monthly ? 20 : 100}
+      decimals={decimals}
+      step={decimals === 3 ? 0.01 : 0.05}
+      max={monthly && !nominal ? 20 : 100}
       error={error}
       allowEmpty={allowEmpty}
       optional={optional}
       placeholder={placeholder}
       note={usingFallback || compact || !equivalent ? undefined : equivalent}
-      onChange={(typed) => onChange(monthly ? periodicToEffective(typed, 12) : typed)}
+      onChange={(typed) => onChange(monthly ? periodicToEffective(typed / scale, 12) : typed)}
       adornment={
         <div
           role="radiogroup"
@@ -165,7 +184,7 @@ export function RateInput({
                 basis === option ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {option === 'ea' ? t.rateInput.effectiveAnnual : t.rateInput.monthly}
+              {option === 'ea' ? t.rateInput.effectiveAnnual : monthlyLabel}
             </button>
           ))}
         </div>

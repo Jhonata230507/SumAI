@@ -19,7 +19,8 @@ const RETURN_BAND = 0.03
 export function calculateInvestment(input: InvestmentInput): InvestmentResult {
   const country = getCountry(input.countryCode)
   const periodsPerYear = FREQUENCY_PER_YEAR[input.contributionFrequency]
-  const periods = input.years * periodsPerYear
+  // Rounded: a duration typed in months is a fraction of a year (18 months = 1.5).
+  const periods = Math.round(input.years * periodsPerYear)
 
   const netAnnualReturn = input.annualReturn - input.feeRate
   const periodicRate = nominalToPeriodic(netAnnualReturn, periodsPerYear)

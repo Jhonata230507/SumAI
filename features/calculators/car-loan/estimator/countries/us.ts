@@ -17,6 +17,10 @@ export const US_CAR_LOAN: CarLoanCountryConfig = {
   },
   // -----------------------------------------------------------------------------
 
+  rateQuote: 'apr',
+  incomePeriod: 'annual',
+  fullCoverageInsurance: false,
+  extraPayments: false,
   creditBands: [
     { id: 'excellent', min: 720, representativeScore: 750 },
     { id: 'good', min: 690, max: 719, representativeScore: 705 },
@@ -24,5 +28,6 @@ export const US_CAR_LOAN: CarLoanCountryConfig = {
     { id: 'poor', max: 629, representativeScore: 600 },
   ],
   term: { minMonths: 12, maxMonths: 96, exampleMonths: 60 },
+  examples: { price: 30_000, budget: 500, insurance: 1_500, income: 60_000, debts: 400 },
   dtiThresholds: { comfortable: 0.36, upper: 0.43 },
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { annuityFactor, breakEvenMonth, dtiLevel, estimateCarLoan, estimateSchedule, type CarLoanEstimateInput } from '../calculate'
+import { annuityFactor, breakEvenMonth, dtiLevel, estimateAmortization, estimateCarLoan, estimateSchedule, type CarLoanEstimateInput } from '../calculate'
 import { getCarLoanConfig } from '../config'
 
 const us = getCarLoanConfig('us')!
@@ -203,5 +203,77 @@ describe('charts', () => {
   it('has no schedule when nothing is financed', () => {
     const estimate = estimateCarLoan(us, { ...price, downPayment: { unit: 'amount', value: 40_000 } })
     expect(estimateSchedule(estimate, 60)).toEqual([])
+  })
+
+  it('an extra monthly payment ends the loan sooner and saves interest', () => {
+    const estimate = estimateCarLoan(us, price)
+    const base = estimateAmortization(estimate, 60)!
+    const extra = estimateAmortization(estimate, 60, 200)!
+    expect(base.periodsSaved).toBe(0)
+    expect(extra.rows.length).toBeLessThan(60)
+    expect(extra.rows.at(-1)!.balance).toBe(0)
+    expect(extra.periodsSaved).toBe(60 - extra.rows.length)
+    expect(extra.interestSaved).toBeGreaterThan(0)
+    expect(extra.totalInterest).toBeCloseTo(base.totalInterest - extra.interestSaved, 0)
+    // The scheduled payment does not change.
+    expect(extra.payment).toBeCloseTo(base.payment, 6)
+  })
+})
+
+describe('Colombia', () => {
+  const co = getCarLoanConfig('co')!
+  const coPrice: CarLoanEstimateInput = {
+    ...price,
+    vehiclePrice: 80_000_000,
+    downPayment: { unit: 'amount', value: 20_000_000 },
+    tradeInValue: 15_000_000,
+    tradeInOwed: 5_000_000,
+    termMonths: 60,
+    apr: 0.18,
+    salesTax: null,
+    fees: 2_000_000,
+    insurance: { annual: 3_000_000, financed: true },
+  }
+
+  it('turns the E.A. rate into a monthly rate', () => {
+    const { monthlyRate } = estimateCarLoan(co, coPrice)
+    expect(monthlyRate).toBeCloseTo(1.18 ** (1 / 12) - 1, 12)
+  })
+
+  it('borrows price + costs + financed insurance − down − trade-in + still owed, with no sales tax', () => {
+    const { figures, monthlyRate } = estimateCarLoan(co, coPrice)
+    // 80M + 2M + 3M − 20M − 15M + 5M = 55M
+    expect(figures?.loanAmount).toBe(55_000_000)
+    expect(figures?.priceWithTax).toBe(80_000_000)
+    expect(figures?.payment).toBeCloseTo(55_000_000 / annuityFactor(monthlyRate, 60), 6)
+  })
+
+  it('leaves insurance paid apart out of the loan', () => {
+    const { figures } = estimateCarLoan(co, { ...coPrice, insurance: { annual: 3_000_000, financed: false } })
+    expect(figures?.loanAmount).toBe(52_000_000)
+    expect(figures?.insuranceAnnual).toBe(3_000_000)
+    expect(figures?.insuranceFinanced).toBe(0)
+  })
+
+  it('ignores a sales tax even if one is passed', () => {
+    const { figures } = estimateCarLoan(co, { ...coPrice, salesTax: 0.19 })
+    expect(figures?.loanAmount).toBe(55_000_000)
+  })
+
+  it('budget mode inverts price mode, insurance included', () => {
+    const forward = estimateCarLoan(co, coPrice).figures!
+    const back = estimateCarLoan(co, {
+      ...coPrice,
+      mode: 'budget',
+      vehiclePrice: null,
+      monthlyBudget: forward.payment,
+    }).figures!
+    expect(back.vehiclePrice).toBeCloseTo(80_000_000, 2)
+  })
+
+  it('schedules with the monthly rate from E.A.', () => {
+    const estimate = estimateCarLoan(co, coPrice)
+    const rows = estimateSchedule(estimate, 60)
+    expect(rows[0].interest).toBeCloseTo(55_000_000 * estimate.monthlyRate, 0)
   })
 })

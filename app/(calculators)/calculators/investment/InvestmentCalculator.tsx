@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { CalculatorLayout } from '@/components/calculator/CalculatorLayout'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultSummary, type SummaryFigure } from '@/components/calculator/ResultSummary'
@@ -12,7 +12,10 @@ import { CurrencyInput } from '@/components/common/CurrencyInput'
 import { PercentageInput } from '@/components/common/PercentageInput'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { InfoTip } from '@/components/common/InfoTip'
+import { TermInput } from '@/components/common/TermInput'
 import { calculateInvestment, yearsToDouble } from '@/features/calculators/investment/calculation'
 import { investmentSchema, type InvestmentSchema } from '@/features/calculators/investment/schema'
 import { useCalculator } from '@/features/calculators/use-calculator'
@@ -33,7 +36,11 @@ export interface InvestmentCalculatorProps {
 }
 
 /** Fields the calculator opens with empty (NaN): the user types their own numbers. */
-const START = { initialAmount: Number.NaN, contribution: Number.NaN, annualReturn: Number.NaN }
+const START = { initialAmount: Number.NaN, contribution: Number.NaN, annualReturn: Number.NaN, years: Number.NaN }
+
+/** Colombia: the kind of investment, which only picks the tax note shown with the results. */
+const CO_INVESTMENT_TYPES = ['cdt', 'fic', 'voluntary', 'stocks', 'other'] as const
+type CoInvestmentType = (typeof CO_INVESTMENT_TYPES)[number]
 
 /**
  * Countries with an estimator config (the US for now) get the config-driven
@@ -50,20 +57,29 @@ export function InvestmentCalculator(props: InvestmentCalculatorProps) {
 
 function ClassicInvestmentCalculator({ country, initial, header, related }: InvestmentCalculatorProps) {
   const { t } = useI18n()
+  const isCo = country.code === 'co'
+  const c = t.investment.co
+  // Colombia has no annual-fee field, so fees stay at zero there.
   const { input, committed, errors, result, set, ready, reset } = useCalculator(
     investmentSchema,
     calculateInvestment,
-    initial,
+    isCo ? { ...initial, feeRate: 0 } : initial,
     { start: START },
   )
+  const [investmentType, setInvestmentType] = useState<CoInvestmentType>('cdt')
 
   const doubling = yearsToDouble(committed.annualReturn - committed.feeRate)
+  // "18 meses", or "2 años" when the duration is whole years.
+  const duration = (years: number) => {
+    const months = Math.round(years * 12)
+    return months % 12 === 0 ? t.common.years(months / 12) : t.common.months(months)
+  }
   const compact = (value: number) => formatCurrency(value, result.currency, { compact: true })
 
   const figures: SummaryFigure[] = [
     {
       key: 'finalBalance',
-      label: t.investment.balanceAfter(committed.years),
+      label: isCo ? c.balanceAfter(duration(committed.years)) : t.investment.balanceAfter(committed.years),
       value: result.finalBalance,
       format: 'currency',
       emphasis: 'primary',
@@ -82,7 +98,9 @@ function ClassicInvestmentCalculator({ country, initial, header, related }: Inve
       value: result.totalContributed,
       format: 'currency',
     },
-    { key: 'totalFees', label: t.investment.lostToFees, value: result.totalFees, format: 'currency' },
+    ...(isCo
+      ? []
+      : [{ key: 'totalFees', label: t.investment.lostToFees, value: result.totalFees, format: 'currency' } as const]),
   ]
   return (
     <CalculatorLayout
@@ -90,8 +108,27 @@ function ClassicInvestmentCalculator({ country, initial, header, related }: Inve
       header={header}
       related={related}
       form={
-        <CalculatorForm onReset={reset}>
+        <CalculatorForm
+          onReset={() => {
+            reset()
+            setInvestmentType('cdt')
+          }}
+        >
           <>
+            {isCo && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="investment-type">{c.type}</Label>
+                  <InfoTip content={c.typeHint} />
+                </div>
+                <Select
+                  id="investment-type"
+                  value={investmentType}
+                  options={CO_INVESTMENT_TYPES.map((value) => ({ value, label: c.types[value] }))}
+                  onChange={(event) => setInvestmentType(event.target.value as CoInvestmentType)}
+                />
+              </div>
+            )}
             <CurrencyInput
               id="initial"
               label={t.investment.startingAmount}
@@ -116,24 +153,59 @@ function ClassicInvestmentCalculator({ country, initial, header, related }: Inve
               onChange={(v) => set('annualReturn', v)}
             />
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            {/* Typed, like every other duration: empty until the user enters it. */}
+            {isCo ? (
+              <TermInput
+                id="years"
+                label={c.duration}
+                defaultUnit="years"
+                inlineNote
+                placeholder="25"
+                min={1}
+                max={720}
+                months={input.years * 12}
+                onChange={(months) => set('years', months / 12)}
+              />
+            ) : (
+              <div className="space-y-1.5">
                 <Label htmlFor="years">{t.investment.yearsInvested}</Label>
-                <span className="text-sm tabular-nums">{input.years}</span>
+                <div className="relative">
+                  <Input
+                    id="years"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={60}
+                    step={1}
+                    placeholder="25"
+                    value={Number.isFinite(input.years) ? String(input.years) : ''}
+                    aria-invalid={Boolean(errors.years)}
+                    className="pr-14 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    onChange={(event) => {
+                      const raw = event.target.value.trim()
+                      set('years', raw === '' ? Number.NaN : Math.round(Number(raw)))
+                    }}
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    {t.investment.us.years}
+                  </span>
+                </div>
+                {errors.years && <p className="text-xs text-destructive">{errors.years}</p>}
               </div>
-              <Slider id="years" min={1} max={50} value={input.years} onChange={(v) => set('years', v)} />
-            </div>
+            )}
 
             <div className="space-y-4">
-              <PercentageInput
-                id="fees"
-                optional
-                label={t.investment.fees}
-                hint={t.investment.feesHint}
-                step={0.01}
-                value={input.feeRate}
-                onChange={(v) => set('feeRate', v)}
-              />
+              {!isCo && (
+                <PercentageInput
+                  id="fees"
+                  optional
+                  label={t.investment.fees}
+                  hint={t.investment.feesHint}
+                  step={0.01}
+                  value={input.feeRate}
+                  onChange={(v) => set('feeRate', v)}
+                />
+              )}
               <PercentageInput
                 id="inflation"
                 optional
@@ -157,7 +229,20 @@ function ClassicInvestmentCalculator({ country, initial, header, related }: Inve
         <>
           {/* The balance on its own, the other figures in one card. */}
           <ResultSummary currency={result.currency} locale={country.locale} figures={figures.slice(0, 1)} />
-          <ResultSummary combined currency={result.currency} locale={country.locale} figures={figures.slice(1)} />
+          <ResultSummary
+            combined
+            currency={result.currency}
+            locale={country.locale}
+            figures={figures.slice(1)}
+            footer={
+              isCo && (
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">{c.taxTitle}: </span>
+                  {c.taxNotes[investmentType]}
+                </p>
+              )
+            }
+          />
 
           {/* Fills the rest of the column: the three outcomes as columns sized to their value. */}
           <Card className="flex flex-col">
@@ -199,7 +284,7 @@ function ClassicInvestmentCalculator({ country, initial, header, related }: Inve
             calculatorId: 'investment',
             countryCode: country.code,
             currency: result.currency,
-            inputs: { ...committed },
+            inputs: isCo ? { ...committed, investmentType } : { ...committed },
             results: {
               finalBalance: result.finalBalance,
               realBalance: result.realBalance,

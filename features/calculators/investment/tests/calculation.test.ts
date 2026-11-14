@@ -47,6 +47,12 @@ describe('calculateInvestment', () => {
     })
     expect(result.finalBalance).toBeCloseTo(12_000, 2)
   })
+
+  it('takes a duration in whole months as a fraction of a year', () => {
+    const base = { ...investmentDefaults, contribution: 100, initialAmount: 0 }
+    expect(calculateInvestment({ ...base, years: 18 / 12 }).totalContributed).toBeCloseTo(1_800, 2)
+    expect(calculateInvestment({ ...base, years: 7 / 12 }).totalContributed).toBeCloseTo(700, 2)
+  })
 })
 
 describe('yearsToDouble', () => {

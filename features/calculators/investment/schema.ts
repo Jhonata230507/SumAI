@@ -11,7 +11,12 @@ export const investmentSchema = z.object({
   contribution: nonNegativeAmount.default(0),
   contributionFrequency: paymentFrequency.default('monthly'),
   annualReturn: rate,
-  years: z.number().int().min(1, 'yearsMin').max(60, 'yearsMax'),
+  // In years; Colombia types the duration in months too, so whole months (1/12 of a year) are allowed.
+  years: z
+    .number()
+    .min(1 / 12 - 1e-9, 'termMin')
+    .max(60, 'yearsMax')
+    .refine((years) => Math.abs(years * 12 - Math.round(years * 12)) < 1e-6, 'termWhole'),
   feeRate: rate.default(0),
   inflationRate: rate.default(0.03),
   contributionGrowth: rate.default(0),

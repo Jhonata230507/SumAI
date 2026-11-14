@@ -1,4 +1,8 @@
-import { buildAmortizationSchedule, type AmortizationRow } from '@/lib/calculations/amortization'
+import {
+  buildAmortizationSchedule,
+  type AmortizationRow,
+  type AmortizationSchedule,
+} from '@/lib/calculations/amortization'
 import { projectDepreciation } from '../calculation'
 import type { CarCreditBand, CarLoanCountryConfig, VehicleCondition } from './config'
 
@@ -28,10 +32,12 @@ export interface CarLoanEstimateInput {
   /** Null: the estimated APR for the condition and credit band is used. */
   apr: number | null
   creditBand: CarCreditBand | null
-  /** Null: the country's estimated sales tax is used. */
+  /** Null: the country's estimated sales tax is used (none where prices include taxes). */
   salesTax: number | null
   /** Registration and fees, added to the amount financed. */
   fees: number
+  /** Yearly all-risk insurance; one year is added to the loan when `financed`. Optional. */
+  insurance?: { annual: number; financed: boolean }
   /** Only for debt-to-income; never changes the payment. */
   annualIncome: number | null
   monthlyDebts: number
@@ -54,6 +60,10 @@ export interface CarLoanFigures {
   downPayment: number
   tradeInValue: number
   tradeInOwed: number
+  /** The yearly insurance premium, and the part of it in the loan (0 when paid apart). */
+  insuranceAnnual: number
+  insuranceFinanced: number
+  fees: number
   /** Price mode: down payment and trade-in cover everything, so nothing is borrowed. */
   nothingToFinance: boolean
   dti: { ratio: number; level: DtiLevel } | null
@@ -62,9 +72,11 @@ export interface CarLoanFigures {
 export type EstimateIssue = 'downPercentOver100' | 'budgetDivisor'
 
 export interface CarLoanEstimate {
-  /** The APR used, and whether it is the config's estimate (field left empty). */
+  /** The rate used, as the country quotes it (APR or E.A.), and whether it is the config's estimate. */
   apr: number
   aprEstimated: boolean
+  /** The monthly rate that rate gives. */
+  monthlyRate: number
   salesTax: number
   salesTaxEstimated: boolean
   /** An input that makes the result impossible; figures are null then. */
@@ -85,6 +97,11 @@ export function resolveApr(config: CarLoanCountryConfig, input: Pick<CarLoanEsti
   return { apr: config.estimates.apr[input.condition][input.creditBand ?? 'unknown'], estimated: true }
 }
 
+/** The monthly rate for a rate quoted the country's way. */
+export function monthlyRateFor(config: CarLoanCountryConfig, rate: number): number {
+  return config.rateQuote === 'effectiveAnnual' ? (1 + rate) ** (1 / 12) - 1 : rate / 12
+}
+
 export function dtiLevel(config: CarLoanCountryConfig, ratio: number): DtiLevel {
   if (ratio < config.dtiThresholds.comfortable) return 'comfortable'
   if (ratio <= config.dtiThresholds.upper) return 'upper'
@@ -94,13 +111,18 @@ export function dtiLevel(config: CarLoanCountryConfig, ratio: number): DtiLevel 
 export function estimateCarLoan(config: CarLoanCountryConfig, input: CarLoanEstimateInput): CarLoanEstimate {
   const { apr, estimated: aprEstimated } = resolveApr(config, input)
   const salesTaxEstimated = !isSet(input.salesTax)
-  const tax = isSet(input.salesTax) ? input.salesTax : config.estimates.salesTax
-  const base = { apr, aprEstimated, salesTax: tax, salesTaxEstimated }
+  const tax = config.estimates.salesTax === null ? 0 : isSet(input.salesTax) ? input.salesTax : config.estimates.salesTax
+  const r = monthlyRateFor(config, apr)
+  const base = { apr, aprEstimated, monthlyRate: r, salesTax: tax, salesTaxEstimated }
 
-  const r = apr / 12
   const n = input.termMonths
   const f = annuityFactor(r, n)
+  // Registration, transfer and other costs, plus a financed insurance year: all borrowed.
   const fees = amount(input.fees)
+  const insuranceAnnual = config.fullCoverageInsurance ? amount(input.insurance?.annual ?? 0) : 0
+  const insuranceFinanced = input.insurance?.financed ? insuranceAnnual : 0
+  const extras = fees + insuranceFinanced
+  const costs = { insuranceAnnual, insuranceFinanced, fees }
   const tradeIn = amount(input.tradeInValue)
   // What is owed on a trade-in only counts when there is one.
   const owed = tradeIn > 0 ? amount(input.tradeInOwed) : 0
@@ -121,7 +143,7 @@ export function estimateCarLoan(config: CarLoanCountryConfig, input: CarLoanEsti
     if (price <= 0 || !(n > 0)) return { ...base, issue: null, figures: null }
 
     const downPayment = percentDown ? down * price : down
-    const loan = Math.max(0, price * (1 + tax) + fees - downPayment - tradeIn + owed)
+    const loan = Math.max(0, price * (1 + tax) + extras - downPayment - tradeIn + owed)
     const payment = loan / f
     const totalOfPayments = payment * n
 
@@ -139,6 +161,7 @@ export function estimateCarLoan(config: CarLoanCountryConfig, input: CarLoanEsti
         downPayment,
         tradeInValue: tradeIn,
         tradeInOwed: owed,
+        ...costs,
         nothingToFinance: loan <= 0,
         dti: dti(payment),
       },
@@ -153,9 +176,9 @@ export function estimateCarLoan(config: CarLoanCountryConfig, input: CarLoanEsti
   if (percentDown) {
     const divisor = 1 + tax - down
     if (divisor <= 0) return { ...base, issue: 'budgetDivisor', figures: null }
-    price = (maxLoan - fees + tradeIn - owed) / divisor
+    price = (maxLoan - extras + tradeIn - owed) / divisor
   } else {
-    price = (maxLoan - fees + down + tradeIn - owed) / (1 + tax)
+    price = (maxLoan - extras + down + tradeIn - owed) / (1 + tax)
   }
   price = Math.max(0, price)
   const totalOfPayments = budget * n
@@ -174,6 +197,7 @@ export function estimateCarLoan(config: CarLoanCountryConfig, input: CarLoanEsti
       downPayment: percentDown ? down * price : down,
       tradeInValue: tradeIn,
       tradeInOwed: owed,
+      ...costs,
       nothingToFinance: false,
       dti: dti(budget),
     },
@@ -185,12 +209,26 @@ export function estimateCarLoan(config: CarLoanCountryConfig, input: CarLoanEsti
  * between principal and interest. Rounded to cents, as charts show money.
  */
 export function estimateSchedule(estimate: CarLoanEstimate, termMonths: number): AmortizationRow[] {
-  if (!estimate.figures || estimate.figures.loanAmount <= 0) return []
+  return estimateAmortization(estimate, termMonths)?.rows ?? []
+}
+
+/**
+ * The full schedule, with an optional extra payment to principal every month: the
+ * scheduled payment stays the same, the loan ends sooner and costs less interest
+ * (`periodsSaved`, `interestSaved`). Null when nothing is financed.
+ */
+export function estimateAmortization(
+  estimate: CarLoanEstimate,
+  termMonths: number,
+  extraPerMonth = 0,
+): AmortizationSchedule | null {
+  if (!estimate.figures || estimate.figures.loanAmount <= 0) return null
   return buildAmortizationSchedule({
     principal: estimate.figures.loanAmount,
-    periodicRate: estimate.apr / 12,
+    periodicRate: estimate.monthlyRate,
     periods: termMonths,
-  }).rows
+    extraPerPeriod: amount(extraPerMonth),
+  })
 }
 
 /** The first month the car is worth more than what is still owed, or null if not within the loan. */

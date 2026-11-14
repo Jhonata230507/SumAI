@@ -118,6 +118,10 @@ app/(calculators)/calculators/car-loan/CarLoanEstimator.tsx   the UI, config-dri
    term is empty) and DTI thresholds.
 2. Register it in `CONFIGS` in `config.ts`.
 
+Colombia (`countries/co.ts`) shows the options a config can switch: rates quoted E.A.
+(`rateQuote`), no sales-tax field because prices include taxes (`salesTax: null`), monthly income (`incomePeriod`) and a yearly
+all-risk insurance that can be financed (`fullCoverageInsurance`).
+
 That is all: the calculation and the UI read everything from the config, and
 the page switches that country to the estimator. If the country quotes credit
 on a different scale, set the band ranges; the labels are built from them.
@@ -150,6 +154,13 @@ The **debt payoff** planner is the fifth, in `features/calculators/debt-payoff/e
 with `DebtPlanner.tsx` as its page: the most debts the list takes, how many years the
 simulation runs before it says a plan never pays off, and the "Try an example" debts.
 It always runs avalanche and snowball, plus a minimums-only baseline.
+
+The **standard loan** estimator (Colombia today) is in `features/calculators/loan/estimator/`
+with `LoanEstimator.tsx` as its page: fixed or decreasing payment (constant principal),
+debtor life insurance charged monthly on the balance, fees, the estimated rate by credit
+history (never above the usury cap) and a warning when a typed rate exceeds it. The usury
+cap is `rateCeiling` in `lib/countries/colombia/financial-rules.ts`; the Superintendencia
+Financiera certifies it monthly, so keep it current. Other countries keep the classic page.
 
 **Add a loan type** that works the same way (a price, a down payment, a
 monthly payment): copy the `estimator/` folder pattern for it, reuse

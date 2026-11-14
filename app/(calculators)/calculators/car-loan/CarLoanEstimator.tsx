@@ -19,7 +19,7 @@ import { Select } from '@/components/ui/select'
 import {
   breakEvenMonth,
   estimateCarLoan,
-  estimateSchedule,
+  estimateAmortization,
   resolveApr,
   type CarLoanEstimateInput,
   type EstimatorMode,
@@ -62,8 +62,14 @@ interface FormState {
   creditBand: CarCreditBand | null
   salesTax: number
   fees: number
-  annualIncome: number
+  /** Yearly or monthly, as the country's config asks for it. */
+  income: number
   monthlyDebts: number
+  /** Colombia: paid to principal every month on top of the payment. */
+  extraPayment: number
+  /** Yearly all-risk insurance premium, and whether it goes into the loan. */
+  insuranceAnnual: number
+  insuranceFinanced: boolean
 }
 
 function blankForm(): FormState {
@@ -83,15 +89,18 @@ function blankForm(): FormState {
     creditBand: null,
     salesTax: Number.NaN,
     fees: Number.NaN,
-    annualIncome: Number.NaN,
+    income: Number.NaN,
     monthlyDebts: Number.NaN,
+    extraPayment: Number.NaN,
+    insuranceAnnual: Number.NaN,
+    insuranceFinanced: true,
   }
 }
 
 const orNull = (value: number) => (Number.isFinite(value) ? value : null)
 const orZero = (value: number) => (Number.isFinite(value) ? value : 0)
 
-function toInput(form: FormState): CarLoanEstimateInput {
+function toInput(config: CarLoanCountryConfig, form: FormState): CarLoanEstimateInput {
   return {
     mode: form.mode,
     condition: form.condition,
@@ -108,7 +117,8 @@ function toInput(form: FormState): CarLoanEstimateInput {
     creditBand: form.creditBand,
     salesTax: orNull(form.salesTax),
     fees: orZero(form.fees),
-    annualIncome: orNull(form.annualIncome),
+    annualIncome: Number.isFinite(form.income) ? form.income * (config.incomePeriod === 'monthly' ? 12 : 1) : null,
+    insurance: { annual: orZero(form.insuranceAnnual), financed: form.insuranceFinanced },
     monthlyDebts: orZero(form.monthlyDebts),
   }
 }
@@ -131,9 +141,18 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((previous) => ({ ...previous, [key]: value }))
 
-  const estimate = useMemo(() => estimateCarLoan(config, toInput(form)), [config, form])
+  const estimate = useMemo(() => estimateCarLoan(config, toInput(config, form)), [config, form])
   const { figures } = estimate
-  const rows = useMemo(() => estimateSchedule(estimate, form.termMonths), [estimate, form.termMonths])
+  // The extra payment only shortens the schedule: the payment, the loan and what fits stay as they are.
+  const extra = config.extraPayments && form.extraPayment > 0 ? form.extraPayment : 0
+  const schedule = useMemo(
+    () => estimateAmortization(estimate, form.termMonths, extra),
+    [estimate, form.termMonths, extra],
+  )
+  const rows = useMemo(() => schedule?.rows ?? [], [schedule])
+  const saving = extra > 0 && schedule && schedule.interestSaved > 0 ? schedule : null
+  const interestPaid = figures && saving ? figures.totalInterest - saving.interestSaved : figures?.totalInterest
+  const paymentsTotal = figures && saving ? figures.totalOfPayments - saving.interestSaved : figures?.totalOfPayments
 
   // Display only: rounding happens here, never in the calculation.
   const moneyFormat = useMemo(
@@ -148,7 +167,8 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
 
   const bandLabel = (id: CarCreditBand) => {
     const range = config.creditBands.find((band) => band.id === id)
-    const span = !range
+    const span =
+      !range || (range.min === undefined && range.max === undefined)
       ? ''
       : range.min !== undefined && range.max !== undefined
         ? e.rangeBetween(range.min, range.max)
@@ -158,13 +178,22 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
     return span ? `${e.creditBands[id]} (${span})` : e.creditBands[id]
   }
 
+  // Rates read the way the country quotes them: "16,50% E.A." in Colombia, a bare APR in the US.
+  const effectiveAnnual = config.rateQuote === 'effectiveAnnual'
+  const rateText = (value: number) => (effectiveAnnual ? `${pct(value)} ${t.rateInput.effectiveAnnual}` : pct(value))
+  const monthlyIncome = Number.isFinite(form.income)
+    ? form.income / (config.incomePeriod === 'monthly' ? 1 : 12)
+    : undefined
+  const salesTaxRate = config.estimates.salesTax
+  const termOptions = config.term.options
+
   // The estimate the APR field falls back to, for its placeholder and hint.
   const estimatedApr = resolveApr(config, { apr: null, condition: form.condition, creditBand: form.creditBand }).apr
   const aprNote = Number.isFinite(form.apr)
     ? undefined
     : form.creditBand
-      ? e.aprEstimateFromScore(pct(estimatedApr), bandLabel(form.creditBand))
-      : e.aprEstimate(pct(estimatedApr))
+      ? e.aprEstimateFromScore(rateText(estimatedApr), bandLabel(form.creditBand))
+      : e.aprEstimate(rateText(estimatedApr))
 
   const priceMode = form.mode === 'price'
   const negativeEquity = figures && figures.tradeInOwed > figures.tradeInValue ? figures.tradeInOwed - figures.tradeInValue : 0
@@ -181,6 +210,35 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
     />
   )
 
+  // The vehicle handed in, and what is still owed on it once there is one. Colombia asks
+  // for it last, after the extra payment; elsewhere it follows the down payment.
+  const tradeInLast = config.country === 'co'
+  const tradeInFields = (
+    <>
+      <CurrencyInput
+        id="trade-in"
+        label={e.tradeIn}
+        optional
+        currency={config.currency}
+        value={form.tradeInValue}
+        placeholder="0"
+        onChange={(v) => set('tradeInValue', v)}
+      />
+
+      {form.tradeInValue > 0 && (
+        <CurrencyInput
+          id="trade-in-owed"
+          label={e.tradeInOwed}
+          optional
+          currency={config.currency}
+          value={form.tradeInOwed}
+          placeholder="0"
+          onChange={(v) => set('tradeInOwed', v)}
+        />
+      )}
+    </>
+  )
+
   return (
     <CalculatorLayout
       // Until there is a result, the shared "enter your numbers" state; a budget the
@@ -188,7 +246,8 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
       ready={hasFigures || estimate.issue === 'budgetDivisor'}
       // The form box keeps the height it opens with: results appearing never resize
       // it, and fields that would make it taller (the estimates) scroll inside it.
-      scrollableForm={hasFigures || estimatesOpen}
+      // A trade-in adds the "still owed" field: it scrolls inside the box too.
+      scrollableForm={hasFigures || estimatesOpen || form.tradeInValue > 0}
       header={header}
       related={related}
       form={
@@ -229,7 +288,7 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
               label={e.vehiclePrice}
               currency={config.currency}
               value={form.vehiclePrice}
-              placeholder={example(30_000)}
+              placeholder={example(config.examples.price)}
               onChange={(v) => set('vehiclePrice', v)}
             />
           ) : (
@@ -238,7 +297,7 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
               label={e.budget}
               currency={config.currency}
               value={form.monthlyBudget}
-              placeholder={example(500)}
+              placeholder={example(config.examples.budget)}
               onChange={(v) => set('monthlyBudget', v)}
             />
           )}
@@ -271,37 +330,31 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
             />
           )}
 
-          <CurrencyInput
-            id="trade-in"
-            label={e.tradeIn}
-            optional
-            currency={config.currency}
-            value={form.tradeInValue}
-            placeholder="0"
-            onChange={(v) => set('tradeInValue', v)}
-          />
+          {!tradeInLast && tradeInFields}
 
-          {form.tradeInValue > 0 && (
-            <CurrencyInput
-              id="trade-in-owed"
-              label={e.tradeInOwed}
-              optional
-              currency={config.currency}
-              value={form.tradeInOwed}
-              placeholder="0"
-              onChange={(v) => set('tradeInOwed', v)}
+          {termOptions ? (
+            // Picked from the terms lenders offer, in months.
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium leading-snug">{e.termMonths}</p>
+              <Segmented
+                label={e.termMonths}
+                value={Number.isFinite(form.termMonths) ? String(form.termMonths) : ''}
+                options={termOptions.map((months) => ({ value: String(months), label: String(months) }))}
+                onChange={(months) => set('termMonths', Number(months))}
+              />
+            </div>
+          ) : (
+            <TermInput
+              id="term"
+              label={e.term}
+              months={form.termMonths}
+              min={config.term.minMonths}
+              max={config.term.maxMonths}
+              placeholder={String(config.term.exampleMonths / 12)}
+              inlineNote
+              onChange={(months) => set('termMonths', months)}
             />
           )}
-
-          <TermInput
-            id="term"
-            label={e.term}
-            months={form.termMonths}
-            min={config.term.minMonths}
-            max={config.term.maxMonths}
-            placeholder={String(config.term.exampleMonths / 12)}
-            onChange={(months) => set('termMonths', months)}
-          />
 
           <PercentageInput
             id="apr"
@@ -315,24 +368,39 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
             onChange={(v) => set('apr', v)}
           />
 
-          <div className="space-y-1.5">
-            <div className="flex items-end justify-between gap-2">
-              <Label htmlFor="credit">{e.credit}</Label>
-              <OptionalTag />
-            </div>
-            <Select
-              id="credit"
-              value={form.creditBand ?? ''}
-              options={[
-                { value: '', label: e.creditNone },
-                ...CAR_CREDIT_BANDS.filter((id) => config.creditBands.some((band) => band.id === id)).map((id) => ({
-                  value: id,
-                  label: bandLabel(id),
-                })),
-              ]}
-              onChange={(event) => set('creditBand', (event.target.value || null) as CarCreditBand | null)}
+          {config.extraPayments ? (
+            <CurrencyInput
+              id="extra"
+              label={e.extraPayment}
+              optional
+              currency={config.currency}
+              value={form.extraPayment}
+              placeholder="0"
+              hint={e.extraPaymentHint}
+              onChange={(v) => set('extraPayment', v)}
             />
-          </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex items-end justify-between gap-2">
+                <Label htmlFor="credit">{e.credit}</Label>
+                <OptionalTag />
+              </div>
+              <Select
+                id="credit"
+                value={form.creditBand ?? ''}
+                options={[
+                  { value: '', label: e.creditNone },
+                  ...CAR_CREDIT_BANDS.filter((id) => config.creditBands.some((band) => band.id === id)).map((id) => ({
+                    value: id,
+                    label: bandLabel(id),
+                  })),
+                ]}
+                onChange={(event) => set('creditBand', (event.target.value || null) as CarCreditBand | null)}
+              />
+            </div>
+          )}
+
+          {tradeInLast && tradeInFields}
 
           {priceMode && (
             <div className="flex items-baseline justify-between gap-3 rounded-lg bg-muted px-3 py-2.5 text-sm">
@@ -358,17 +426,20 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
           </button>
 
           <div id={panelId} hidden={!estimatesOpen} className="space-y-4">
-            <PercentageInput
-              id="sales-tax"
-              label={e.salesTax}
-              optional
-              step={0.1}
-              max={20}
-              value={form.salesTax}
-              placeholder={(config.estimates.salesTax * 100).toFixed(2)}
-              hint={Number.isFinite(form.salesTax) ? undefined : e.salesTaxNote(pct(config.estimates.salesTax))}
-              onChange={(v) => set('salesTax', v)}
-            />
+            {/* Only where quoted prices leave taxes out. */}
+            {salesTaxRate !== null && (
+              <PercentageInput
+                id="sales-tax"
+                label={e.salesTax}
+                optional
+                step={0.1}
+                max={20}
+                value={form.salesTax}
+                placeholder={(salesTaxRate * 100).toFixed(2)}
+                hint={Number.isFinite(form.salesTax) ? undefined : e.salesTaxNote(pct(salesTaxRate))}
+                onChange={(v) => set('salesTax', v)}
+              />
+            )}
             <CurrencyInput
               id="fees"
               label={e.fees}
@@ -379,15 +450,57 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
               hint={e.feesHint}
               onChange={(v) => set('fees', v)}
             />
+            {config.fullCoverageInsurance && (
+              <CurrencyInput
+                id="insurance"
+                // No "Optional" tag: the label, its tip and the finance switch fill the row.
+                label={e.insurance}
+                currency={config.currency}
+                value={form.insuranceAnnual}
+                placeholder={example(config.examples.insurance)}
+                hint={e.insuranceHint}
+                note={
+                  form.insuranceAnnual > 0 && !form.insuranceFinanced
+                    ? e.insuranceApart
+                    : undefined
+                }
+                adornment={
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={form.insuranceFinanced}
+                    onClick={() => set('insuranceFinanced', !form.insuranceFinanced)}
+                    className="flex items-center gap-1.5 rounded-full text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {e.financeInsurance}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        'relative h-4 w-7 rounded-full transition-colors',
+                        form.insuranceFinanced ? 'bg-white' : 'bg-muted',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'absolute top-0.5 h-3 w-3 rounded-full transition-all',
+                          form.insuranceFinanced ? 'left-3.5 bg-black' : 'left-0.5 bg-muted-foreground',
+                        )}
+                      />
+                    </span>
+                  </button>
+                }
+                onChange={(v) => set('insuranceAnnual', v)}
+              />
+            )}
             <CurrencyInput
               id="income"
-              label={e.income}
+              label={config.incomePeriod === 'monthly' ? e.incomeMonthly : e.income}
               optional
               currency={config.currency}
-              value={form.annualIncome}
-              placeholder={example(60_000)}
+              value={form.income}
+              placeholder={example(config.examples.income)}
               hint={e.incomeHint}
-              onChange={(v) => set('annualIncome', v)}
+              onChange={(v) => set('income', v)}
             />
             <CurrencyInput
               id="debts"
@@ -395,7 +508,7 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
               optional
               currency={config.currency}
               value={form.monthlyDebts}
-              placeholder={example(400)}
+              placeholder={example(config.examples.debts)}
               hint={e.debtsHint}
               onChange={(v) => set('monthlyDebts', v)}
             />
@@ -410,7 +523,7 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
               emphasis="primary"
               label={e.payment}
               value={show(figures?.payment)}
-              detail={e.paymentDetail(pct(estimate.apr), estimate.aprEstimated, form.termMonths)}
+              detail={e.paymentDetail(rateText(estimate.apr), estimate.aprEstimated, form.termMonths)}
             />
           ) : (
             <ResultCard
@@ -418,7 +531,7 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
               label={e.maxLoan}
               value={show(figures?.loanAmount)}
               detail={e.maxLoanDetail(
-                pct(estimate.apr),
+                rateText(estimate.apr),
                 estimate.aprEstimated,
                 form.termMonths,
                 Number.isFinite(form.monthlyBudget) ? money(form.monthlyBudget) : dash,
@@ -432,15 +545,36 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
                 {priceMode ? (
                   <>
                     <Figure label={e.loanAmount} value={show(figures?.loanAmount)} />
-                    <Figure label={e.totalInterest} value={show(figures?.totalInterest)} />
-                    <Figure label={e.totalOfPayments} value={show(figures?.totalOfPayments)} />
-                    <Figure label={e.priceWithTax} value={show(figures?.priceWithTax)} />
+                    <Figure
+                      label={e.totalInterest}
+                      value={show(interestPaid)}
+                      detail={saving ? e.interestSaved(money(saving.interestSaved)) : undefined}
+                    />
+                    <Figure label={e.totalOfPayments} value={show(paymentsTotal)} />
+                    {salesTaxRate !== null ? (
+                      <Figure label={e.priceWithTax} value={show(figures?.priceWithTax)} />
+                    ) : (
+                      // Prices include taxes: what is borrowed on top of the price instead.
+                      <Figure
+                        label={e.financedCosts}
+                        value={figures ? money(figures.fees + figures.insuranceFinanced) : dash}
+                        detail={
+                          figures && figures.insuranceAnnual > 0 && figures.insuranceFinanced === 0
+                            ? e.insurancePaidApart(money(figures.insuranceAnnual))
+                            : undefined
+                        }
+                      />
+                    )}
                   </>
                 ) : (
                   <>
                     <Figure label={e.priceThatFits} value={show(figures?.vehiclePrice)} />
-                    <Figure label={e.totalInterest} value={show(figures?.totalInterest)} />
-                    <Figure label={e.totalOfPayments} value={show(figures?.totalOfPayments)} />
+                    <Figure
+                      label={e.totalInterest}
+                      value={show(interestPaid)}
+                      detail={saving ? e.interestSaved(money(saving.interestSaved)) : undefined}
+                    />
+                    <Figure label={e.totalOfPayments} value={show(paymentsTotal)} />
                     <Figure
                       label={e.downAndTradeIn}
                       value={figures ? money(figures.downPayment + figures.tradeInValue) : dash}
@@ -450,6 +584,9 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
                 )}
               </dl>
 
+              {saving && (
+                <Note>{e.extraEffect(money(extra), saving.periodsSaved, money(saving.interestSaved))}</Note>
+              )}
               {figures?.nothingToFinance && <Note>{e.nothingToFinance}</Note>}
               {estimate.issue === 'budgetDivisor' && <Note tone="warning">{e.budgetDivisor}</Note>}
               {negativeEquity > 0 && <Note tone="warning">{e.negativeEquity(money(negativeEquity))}</Note>}
@@ -504,7 +641,7 @@ export function CarLoanEstimator({ country, config, header, related }: CarLoanEs
             amount={figures.loanAmount}
             termMonths={form.termMonths}
             creditScore={config.creditBands.find((band) => band.id === form.creditBand)?.representativeScore}
-            monthlyIncome={Number.isFinite(form.annualIncome) ? form.annualIncome / 12 : undefined}
+            monthlyIncome={monthlyIncome}
           />
         ) : (
           <Card>
